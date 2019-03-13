@@ -8,8 +8,12 @@ Source:     %{name}-%{version}.tar.gz
 Packager:   Eric Belhomme <ebelhomme@fr.scc.com>
 URL:        %rgm_web_site
 
+BuildRequires:  rpm-macros-rgm
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 
-BuildRequires: rpm-macros-rgm
+###%package -n rpm-macros-rgm
+BuildArch:      noarch
+
 
 %description
 Base package for common RGM utility scripts
@@ -20,8 +24,8 @@ Base package for common RGM utility scripts
 %build
 
 %install
-install -o root -g %{rgm_group} -d sql %{_datarootdir}/rgm
-install -d doc %{_docdir}/rgm
+install -o root -g %{rgm_group} -d sql %{BuildRoot}%{_datarootdir}/rgm
+install -d doc %{BuildRoot}%%{_docdir}/rgm
 
 %files
 %{_datarootdir}/rgm
