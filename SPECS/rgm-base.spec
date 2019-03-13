@@ -3,11 +3,11 @@ Version:    1.0
 Release:    0.rgm
 Summary:    base RGM utilities
 License:    GPL
-BuildArch:  noarch
+Source:     %{name}-%{version}.tar.gz
+
 Packager:   Eric Belhomme <ebelhomme@fr.scc.com>
 URL:        %rgm_web_site
 
-Source: %{name}-%{version}.tar.gz
 
 BuildRequires: rpm-macros-rgm
 
