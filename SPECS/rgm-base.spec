@@ -6,21 +6,22 @@ License:    GPL
 BuildArch:  noarch
 Packager:   Eric Belhomme <ebelhomme@fr.scc.com>
 URL:        %rgm_web_site
-Source0:    sql/manage_sql.sh
-Source1:    doc/readme.txt
+
+Source: %{name}-%{version}.tar.gz
+
+BuildRequires: rpm-macros-rgm
 
 %description
 Base package for common RGM utility scripts
 
 %prep
+%setup -q
 
 %build
 
 %install
-rm -rf %{buildroot}
-
-install -o root -g %{rgm_group} %{SOURCE0} %{_datarootdir}/rgm/sql
-install %{SOURCE1} %{_docdir}/rgm
+install -o root -g %{rgm_group} -d sql %{_datarootdir}/rgm
+install -d doc %{_docdir}/rgm
 
 %files
 %{_datarootdir}/rgm
