@@ -1,19 +1,21 @@
-Name:       rgm-base
-Version:    1.0
-Release:    0.rgm
-Summary:    base RGM utilities
-License:    GPL
-Source:     %{name}-%{version}.tar.gz
+%define name    rgm-base
+%define version 1.0
+%define release 0.rgm
 
-Packager:   Eric Belhomme <ebelhomme@fr.scc.com>
-URL:        %rgm_web_site
+Summary:   base RGM utilities
+Name:      %{name}
+Version:   %{version}
+Release:   %{release}
+Copyright: GPL
+#Group: Amusements/Graphics
+BuildArch: noarch
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
+URL:       %rgm_web_site
+Vendor:    SCC
+Packager:  ebelhomme@fr.scc.com
+Provides:  %{name}
 
 BuildRequires:  rpm-macros-rgm
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
-
-###%package -n rpm-macros-rgm
-BuildArch:      noarch
-
 
 %description
 Base package for common RGM utility scripts
