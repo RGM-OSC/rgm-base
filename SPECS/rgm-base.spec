@@ -4,31 +4,30 @@ Version:   1.0
 Release:   0.rgm
 License:   GPL
 BuildArch: noarch
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 URL:       %rgm_web_site
 Vendor:    SCC
 Packager:  ebelhomme@fr.scc.com
 
 BuildRequires:  rpm-macros-rgm
 
-Source0: doc/readme.txt
-Source1: sql/manage_sql.sh
+Source: %name-%version.tar.gz
 
 %description
 Base package for common RGM utility scripts
 
 %prep
-%setup -c -T
+%setup -q
 
 %build
 
+
 %install
-install -Dp -o root -g %{rgm_group} %{SOURCE1} %{BuildRoot}%{_datarootdir}/rgm/%{SOURCE1}
-install -Dp %{SOURCE0} %{BuildRoot}%%{_docdir}/rgm/%{SOURCE0}
+install -Dp -o root -g %{rgm_group} sql/manage_sql.sh %{buildroot}%{_datarootdir}/rgm/manage_sql.sh
+install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 
 %files
-%{_datarootdir}/rgm
-%{_docdir}/rgm
+%{_datarootdir}/rgm/*
+%{_docdir}/rgm/*
 
 %post
 
