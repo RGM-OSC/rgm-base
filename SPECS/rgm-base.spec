@@ -1,11 +1,7 @@
-%define name    rgm-base
-%define version 1.0
-%define release 0.rgm
-
 Summary:   base RGM utilities
-Name:      %{name}
-Version:   %{version}
-Release:   %{release}
+Name:      rgm-base
+Version:   1.0
+Release:   0.rgm
 Copyright: GPL
 #Group: Amusements/Graphics
 BuildArch: noarch
