@@ -6,11 +6,45 @@
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin"
 
-DBNAME="$1"
-FILE_SQL_SCHEMA="$2"
-SQL_USER="$3"
-SQL_PASSWORD="$4"
-SQL_PRIVILEGES="$5"
+function help () {
+    cat <<EOF
+
+$0 - install or update MariaDB SQL schema
+
+usage:
+$0 -d <database name> -s <SQL schema file> -u <SQL user> -p <SQL passwd> -r <user privileges>
+
+    -d - database name to create if it not already exists
+    -s - SQL schema file to init DB (leave blank to to init the DB)
+    -u - SQL user to grant on specified DB (it host part not specified, defaults to 'localhost')
+    -p - SQL password to set for DB connection
+    -r - specific user privileges to apply (GRANT) on DB (defaults to 'ALL PRIVILEGES')
+EOF
+}
+DBNAME=
+FILE_SQL_SCHEMA=
+SQL_USER=
+SQL_PASSWORD=
+SQL_PRIVILEGES="ALL PRIVILEGES"
+
+while getopts "dsupr" option; do
+  case "$1" in
+    -d)
+      DBNAME=$2; shift; shift; ;;
+    -s)
+      FILE_SQL_SCHEMA=$2; shift; shift; ;;
+    -u)
+      SQL_USER=$2; shift; shift; ;;
+    -p)
+      SQL_PASSWORD=$2; shift; shift; ;;
+    -r)
+    SQL_PRIVILEGES=$2; shift; shift; ;;
+    *)
+      help
+      shift
+      ;;
+  esac
+done
 
 
 if [ -z $DBNAME ]; then
@@ -18,14 +52,11 @@ if [ -z $DBNAME ]; then
     exit 1
 fi
 
-if [ -z $FILE_SQL_SCHEMA ]; then
-    # SQL schema file not provided
-    exit 2
-fi
-
-if [ ! -e $FILE_SQL_SCHEMA ]; then
-    # SQL schema file not found
-    exit 3
+if [ ! -z $FILE_SQL_SCHEMA ]; then
+    if [ ! -e $FILE_SQL_SCHEMA ]; then
+        # SQL schema file not found
+        exit 3
+    fi
 fi
 
 MYSQL_SOCKET=$(mktemp -u --suffix -mysql-sock)
@@ -45,7 +76,9 @@ fi
 # create and init database if it not already exists
 if [ "$($MYSQL -e 'show databases' | grep -c ^${DBNAME}\$)" == "0" ]; then
     $MYSQL -e "CREATE DATABASE ${DBNAME};"
-    cat ${FILE_SQL_SCHEMA} | $MYSQL ${DBNAME}
+    if [ ! -z $FILE_SQL_SCHEMA ]; then
+        $MYSQL ${DBNAME} < ${FILE_SQL_SCHEMA}
+    fi
 fi
 
 # is a user is supplied, grant privileges on DB to that user
@@ -58,7 +91,6 @@ if [ ! -z $SQL_USER ]; then
     else
         $MYSQL -e "CREATE USER IF NOT EXISTS ${USERNAME} IDENTIFIED BY '${SQL_PASSWORD}';"
     fi
-    if [ -z $SQL_PRIVILEGES ]; then SQL_PRIVILEGES='ALL privileges'; fi
     $MYSQL -e "GRANT ${SQL_PRIVILEGES} ON `${DBNAME}`.* TO '${USERNAME}'@'${USERHOST}';"
 fi
 

@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   0.rgm
+Release:   1.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -32,5 +32,8 @@ install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 %post
 
 %changelog
+* Fri Mar 15 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-1.rgm
+- update script to handle getopts arguments
+
 * Wed Mar 13 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-0.rgm
 - initial release
