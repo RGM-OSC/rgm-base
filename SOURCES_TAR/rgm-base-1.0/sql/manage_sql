@@ -1,0 +1,16 @@
+# Command-line options for manage_sql
+#
+
+### manage_sql log file location. Defaults to /var/log/rgm_manage_sql.log
+# LOGFILE="/var/log/rgm_manage_sql.log"
+
+### override log level (default=3). acceptables values are:
+###  0 -> debug
+###  1 -> fatal
+###  2 -> warning
+###  3 -> info
+###  4 ->  no log
+# LOGLEVEL=3
+
+### default privileges to apply to SQL user. defaults to 'ALL PRIVILEGES'
+# SQL_PRIVILEGES="ALL PRIVILEGES"

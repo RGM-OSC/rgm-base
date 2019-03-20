@@ -22,10 +22,12 @@ Base package for common RGM utility scripts
 
 
 %install
+install -Dp -m 0644 sql/manage_sql %{buildroot}%{_sysconfdir}/sysconfig/rgm/manage_sql
 install -Dp -o root -g %{rgm_group} sql/manage_sql.sh %{buildroot}%{_datarootdir}/rgm/manage_sql.sh
 install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 
 %files
+%{_sysconfdir}/sysconfig/rgm/*
 %{_datarootdir}/rgm/*
 %{_docdir}/rgm/*
 
@@ -38,6 +40,8 @@ install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 %changelog
 * Wed Mar 20 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-2.rgm
 - fix sql cnx timeout because for mysqld startup delay
+- global rewrite of sql_manage.sh
+- add the ability to override sql_manage config with /etc/sysconfig/rgm/sql_manage
 - creates RGM group as this packages is marked as a dependency for almost
   all RGM packages
 
