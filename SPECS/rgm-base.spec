@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   1.rgm
+Release:   2.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -29,9 +29,18 @@ install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 %{_datarootdir}/rgm/*
 %{_docdir}/rgm/*
 
+%pre
+# create RGM system group if it doesn't already exists
+/usr/sbin/groupadd -r %{rgm_group} >/dev/null 2>&1 || :
+
 %post
 
 %changelog
+* Wed Mar 20 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-2.rgm
+- fix sql cnx timeout because for mysqld startup delay
+- creates RGM group as this packages is marked as a dependency for almost
+  all RGM packages
+
 * Fri Mar 15 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-1.rgm
 - update script to handle getopts arguments
 
