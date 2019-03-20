@@ -207,7 +207,7 @@ if [ $? -eq 0 ]; then
 				logfile 3 "create user '${USERNAME}'@'${USERHOST}'"
 				echo "FLUSH PRIVILEGES;" >> $SQLFILE
 				echo "CREATE USER ${USERNAME};" >> $SQLFILE
-				echo "UPDATE user SET authentication_string = password('$SQL_PASSWORD') where user = '$USERNAME' AND host = '$USERHOST';"  >> $SQLFILE
+				echo "SET PASSWORD FOR '$USERNAME'@'$USERHOST' = PASSWORD('$SQL_PASSWORD');" >> $SQLFILE
 			fi
 			echo "FLUSH PRIVILEGES;" >> $SQLFILE
 			echo "GRANT ${SQL_PRIVILEGES} ON \`${DBNAME}\`.* TO '${USERNAME}'@'${USERHOST}';" >> $SQLFILE
