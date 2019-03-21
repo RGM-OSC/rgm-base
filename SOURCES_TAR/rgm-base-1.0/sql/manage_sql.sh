@@ -190,7 +190,7 @@ if [ $? -eq 0 ]; then
 		if [ ! -z $SQL_USER ]; then
 			# as mariadb is running in safe mode with --skip-grant-tables
 			# flush privileges is required to restart granting prior creating user
-			# or granting privileges.
+			# or granting privileges./srv/eyesofnetwork/nagios/var/log/rw/live
 			# as a consequence, we'll loose the password-less auth afterward...
 			# so we create a temporary SQL script to apply all modifications
 			# in one shoot
@@ -206,8 +206,10 @@ if [ $? -eq 0 ]; then
 			if [ "$UEXISTS" == "0" ]; then
 				logfile 3 "create user '${USERNAME}'@'${USERHOST}'"
 				echo "FLUSH PRIVILEGES;" >> $SQLFILE
-				echo "CREATE USER ${USERNAME};" >> $SQLFILE
-				echo "SET PASSWORD FOR '$USERNAME'@'$USERHOST' = PASSWORD('$SQL_PASSWORD');" >> $SQLFILE
+				echo "CREATE USER '${USERNAME}'@'${USERHOST}';" >> $SQLFILE
+				echo "SET PASSWORD FOR '${USERNAME}'@'${USERHOST}' = PASSWORD('$SQL_PASSWORD');" >> $SQLFILE
+			else
+				logfile 3 "user '${USERNAME}'@'${USERHOST}' already exists. skipping..."
 			fi
 			echo "FLUSH PRIVILEGES;" >> $SQLFILE
 			echo "GRANT ${SQL_PRIVILEGES} ON \`${DBNAME}\`.* TO '${USERNAME}'@'${USERHOST}';" >> $SQLFILE
