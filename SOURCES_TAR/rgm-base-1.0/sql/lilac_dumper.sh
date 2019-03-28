@@ -28,7 +28,7 @@ EOF
 }
 
 SQLOUT=
-DUMPCLAUSE="--where='id<10000'"
+DUMPCLAUSE="--where=id<10000"
 RESETINCR=0
 LILACUSR=
 LILACPWD=
@@ -44,8 +44,8 @@ while getopts hd:csfrb:u:p: arg; do
 	case "$arg" in
 		h) print_help;;
 		d) SQLOUT="$OPTARG";;
-		c) DUMPCLAUSE="--where='id<10000'";;
-		s) DUMPCLAUSE="--where='id>=10000'";;
+		c) DUMPCLAUSE="--where=id<10000";;
+		s) DUMPCLAUSE="--where=id>=10000";;
 		f) DUMPCLAUSE=;;
 		r) RESETINCR=1;;
 		b) LILACDB="$OPTARG";;
@@ -94,6 +94,7 @@ if [ -z $LILACDB ]; then
 	LILACDB=$(grep 'dbname=' $LILACCFG | sed "s/[',]//g" | cut -d '=' -f 4)
 fi
 SQLOPTS="--user=${LILACUSR} --password=${LILACPWD}"
+
 
 # enumerates tables in Lilac DB then dump them one by one
 for TABLE in $(mysql $SQLOPTS -N $LILACDB --execute "SHOW TABLES;"); do
