@@ -20,9 +20,9 @@ Option:
   -s        : Dumps *ONLY* installation specific lilac objects (eg. ids >= 10000)
   -f        : Dumps *BOTH* core & specific lilac object (eg. -c -s)
   -r        : remove AUTO_INCREMENTS values from CREATE statements
-	-b <db>   : Lilac database name - default: autoconfig
-	-u <user> : SQL user with granted privileges for Lilac DB - default: autoconfig
-	-p <pwd>  : SQL user password - default: autoconfig
+  -b <db>   : Lilac database name - default: autoconfig
+  -u <user> : SQL user with granted privileges for Lilac DB - default: autoconfig
+  -p <pwd>  : SQL user password - default: autoconfig
 EOF
 	exit 1
 }
@@ -33,6 +33,12 @@ RESETINCR=0
 LILACUSR=
 LILACPWD=
 LILACDB=
+
+CRE='\033[0;31m'
+CGR='\033[0;32m'
+CYE='\033[0;33m'
+CNC='\033[0m'
+CBOLD='\033[1m'
 
 while getopts hd:csfrb:u:p: arg; do
 	case "$arg" in
@@ -83,11 +89,11 @@ SQLOPTS="--user=${LILACUSR} --password=${LILACPWD}"
 
 # enumerates tables in Lilac DB then dump them one by one
 for TABLE in $(mysql $SQLOPTS -N $LILACDB --execute "SHOW TABLES;"); do
-	if [[ $TABLE =~ ^nagios_.* ]]; then
-		echo "dump table $TABLE with values"
+	if [[ $TABLE =~ ^(nagios_.*|.+port_job|label)$ ]]; then
+		echo -e "dump table ${CGR}${CBOLD}${TABLE}${CNC} with values"
 		mysqldump $SQLOPTS --compact --add-drop-table $LILACDB $TABLE $DUMPCLAUSE >> $SQLOUT
 	else
-		echo "dump table $TABLE schema only"
+		echo -e "dump table ${CGR}${TABLE}${CNC} schema only"
 		mysqldump $SQLOPTS --compact --add-drop-table --no-data $LILACDB $TABLE >> $SQLOUT
 	fi
 done
