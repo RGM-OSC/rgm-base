@@ -6,6 +6,7 @@ function print_help() {
 $0 - set or reset Lilac tables AUTO_INCREMENT values
 
 Option:
+  -v  : view current AUTO_INCREMENT values
   -s  : set AUTO_INCREMENT >= 10000
   -r  : reset AUTO_INCREMENT to highest value currently in use on table +1
 
@@ -13,11 +14,12 @@ EOF
 	exit 1
 }
 MODE=
-while getopts hsr arg; do
+while getopts hsrv arg; do
 	case "$arg" in
 		h) print_help;;
 		s) MODE="set";;
 		r) MODE="reset";;
+		v) MODE="view";;
 		*) print_help;;
 	esac
 done
@@ -41,10 +43,12 @@ function process_table() {
 	TABLE="$1"
 
 	MAX_ID=$($MYSQL -e "SELECT MAX(id) FROM $TABLE;")
+	CUR_INCR=$($MYSQL -e "SELECT AUTO_INCREMENT FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '${LILACDB}' AND TABLE_NAME = '${TABLE}';")
 	if [ "$MAX_ID" == "NULL" ]; then
 		MAX_ID=0
 	fi
-	if [ $MODE == "set" ]; then
+	case $MODE in
+	"set")
 		if [ $MAX_ID -lt 10000 ]; then
 			COL=$CGR
 			MAX_ID=10000
@@ -54,8 +58,8 @@ function process_table() {
 		fi
 		printf "set AUTO_INCREMENT on table ${CBOLD}%-45s${CNC} - value: ${COL}%s${CNC}\n" $TABLE $MAX_ID
 		$MYSQL -e "ALTER TABLE $TABLE AUTO_INCREMENT = $MAX_ID;"
-	elif [ $MODE == "reset" ]; then
-		CUR_INCR=$($MYSQL -e "SELECT AUTO_INCREMENT FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '${LILACDB}' AND TABLE_NAME = '${TABLE}';")
+		;;
+	"reset")
 		if [ $MAX_ID -lt $CUR_INCR ]; then
 			MAX_ID=$(( $MAX_ID + 1 ))
 			if [ $MAX_ID -gt 10000 ]; then
@@ -68,8 +72,19 @@ function process_table() {
 		else
 			printf "Dont't alter AUTO_INCREMENT on table %-45s as value is %s\n" $TABLE $MAX_ID
 		fi
-	fi
-	
+		;;
+	"view")
+		if [ $CUR_INCR -gt 10000 ]; then
+			COL=$CYE
+		else
+			COL=$CGR
+		fi
+		printf "AUTO_INCREMENT value on table ${CBOLD}%-45s${CNC} - value: ${COL}%s${CNC}\n" $TABLE $CUR_INCR
+		;;
+	*)
+		print_help
+		;;
+	esac
 }
 
 for TABLE in $($MYSQL --execute "SHOW TABLES;"); do
