@@ -74,6 +74,14 @@ if [ $? -ne 0 ]; then
 	echo "Error: failed to create file $SQLOUT"
 	exit 1
 fi
+cat > $SQLOUT <<EOF
+-- RGM Lilac database dump
+-- Generated with $(basename $0) on $(date) from $(hostname -f) server
+-- cmdline: $(basename $0) $@
+--
+-- Copyright SCC 2019
+
+EOF
 
 LILACCFG=/srv/rgm/lilac/includes/lilac-conf.php
 if [ -z $LILACUSR ]; then
