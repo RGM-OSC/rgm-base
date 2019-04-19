@@ -1,0 +1,83 @@
+#!/bin/bash
+#
+# Copyright (C) 2019 RGM Team
+# 2019-04-19 - v. 1.0 - Eric Belhomme <ebelhomme@fr.scc.com>
+#
+# LICENCE :
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+#########################################
+
+function print_help() {
+
+    echo -e " \e[1m-+- \e[34mRGM\e[39m updater tool -+-\e[0m\n"
+    echo -e "Usage:\n\n  \e[1mrgmupdate -h -p -r -u -a\n"
+    echo -e "  -h : this help message"
+    echo -e "  -p : update Ansible playbook from remote Git repo prior to run the update playbook"
+    echo -e "  -r : update Ansible roles from using Ansible Galaxy prior to run the update playbook"
+    echo -e "  -u : run the Ansible update playbook only"
+    echo -e "  -a : synonym of -p -r -u"
+    echo -e "\n(c) 2019 RGM team - http://www.rgm-could.io"
+}
+
+ANSIBLEPB=0
+ANSIBLEGL=0
+ANSIBLERN=0
+ANSIBLE_RGM_INSTALLER_REPO="http://gitlab.budcca-demo.lab/rgm-ansible/ansible-rgm.git"
+ANSIBLE_ROOT="/root/ansible-rgm"
+CURDIR=$(pwd)
+
+while getopts hprua arg; do
+	case "$arg" in
+		h) print_help ;;
+		p) ANSIBLEPB=1 ;;
+		r) ANSIBLEGL=1 ;;
+		u) ANSIBLERN=1 ;;
+		a)
+		    ANSIBLEPB=1
+		    ANSIBLEGL=1
+		    ANSIBLERN=1
+            ;;
+		*) print_help;;
+	esac
+done
+
+if [ ! -e $ANSIBLE_ROOT ]; then
+    echo "Ansible root not found, force -p -r"
+    ANSIBLEPB=1
+    ANSIBLEGL=1
+    cd $(dirname $ANSIBLE_ROOT)
+    git clone $ANSIBLE_RGM_INSTALLER_REPO
+fi
+
+if [ $ANSIBLEPB -eq 1 ]; then
+    cd $ANSIBLE_ROOT
+    if [ -e /root/rgm-installer_auto-partition.yml ]; then
+        git checkout group_vars/rgm.yml
+        git pull
+        cat /root/rgm-installer_auto-partition.yml >> group_vars/rgm.yml
+    else
+        cp group_vars/rgm.yml /tmp/
+        git checkout group_vars/rgm.yml
+        git pull
+        rm -d group_vars/rgm.yml
+        mv /tmp/rgm.yml group_vars/rgm.yml
+    fi
+fi
+
+if [ $ANSIBLEGL -eq 1 ]; then
+    cd $ANSIBLE_ROOT
+    ansible-galaxy install -f -p ${ANSIBLE_ROOT}/roles -r ${ANSIBLE_ROOT}/roles/requirements.yml
+fi
+
+if [ $ANSIBLERN -eq 1 ]; then
+    cd $ANSIBLE_ROOT
+    ansible-playbook rgm-installer.yml
+fi
