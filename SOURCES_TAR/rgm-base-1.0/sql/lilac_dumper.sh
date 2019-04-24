@@ -91,14 +91,14 @@ if [ -z $LILACPWD ]; then
 	LILACPWD=$(grep "'password'\s*=>" $LILACCFG | sed "s/[',>]//g" | awk '{print$3}')
 fi
 if [ -z $LILACDB ]; then
-	LILACDB=$(grep 'dbname=' $LILACCFG | sed "s/[',]//g" | cut -d '=' -f 4)
+	LILACDB=$(grep 'dbname=' $LILACCFG | perl -pe "s/^.*dbname=(.+?)([;,'].+)?$/\1/")
 fi
 SQLOPTS="--user=${LILACUSR} --password=${LILACPWD}"
 
 
 # enumerates tables in Lilac DB then dump them one by one
 for TABLE in $(mysql $SQLOPTS -N $LILACDB --execute "SHOW TABLES;"); do
-	if [[ $TABLE =~ ^(nagios_.*|.+port_job|label)$ ]]; then
+	if [[ $TABLE =~ ^(nagios_.*|.+port_job|label|lilac_configuration)$ ]]; then
 		echo -e "dump table ${CGR}${CBOLD}${TABLE}${CNC} with values"
 		mysqldump $SQLOPTS --compact --add-drop-table $LILACDB $TABLE $DUMPCLAUSE >> $SQLOUT
 	else
