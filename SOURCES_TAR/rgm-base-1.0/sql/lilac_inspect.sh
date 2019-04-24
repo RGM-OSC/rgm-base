@@ -27,7 +27,7 @@ function process_table() {
 LILACCFG=/srv/rgm/lilac/includes/lilac-conf.php
 LILACUSR=$(grep "'user'\s*=>" $LILACCFG | sed "s/[',>]//g" | awk '{print$3}')
 LILACPWD=$(grep "'password'\s*=>" $LILACCFG | sed "s/[',>]//g" | awk '{print$3}')
-LILACDB=$(grep 'dbname=' $LILACCFG | sed "s/[',]//g" | cut -d '=' -f 4)
+LILACDB=$(grep 'dbname=' $LILACCFG | perl -pe "s/^.*dbname=(.+?)([;,'].+)?$/\1/")
 MYSQL="mysql --user=$LILACUSR --password=$LILACPWD --batch -N $LILACDB"
 process_table "export_job"
 process_table "import_job"
