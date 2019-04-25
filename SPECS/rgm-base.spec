@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   4.rgm
+Release:   5.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -43,6 +43,10 @@ install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 %post
 
 %changelog
+* Wed Apr 25 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-5.rgm
+- add feature on manage-sql.sh script (-a opption)
+- bug fix on lilac_* scripts (autoconfig issue after lilac 3 upgrade)
+
 * Fri Apr 19 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-4.rgm
 - introduce rgmupdate command
 

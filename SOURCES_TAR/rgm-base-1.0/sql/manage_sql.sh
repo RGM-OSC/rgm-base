@@ -13,6 +13,7 @@ SQL_PRIVILEGES="ALL PRIVILEGES"
 LOGLEVEL=3
 DBNAME=
 FILE_SQL_SCHEMA=
+APPEND_SCRIPTS=
 SQL_USER=
 SQL_PASSWORD=
 MYSQL_PID=
@@ -33,6 +34,7 @@ $0 -d <database name> -s <SQL schema file> -u <SQL user> -p <SQL passwd> -r <use
 	-l - log level : 0->debug, 1->fatal, 2->warning, 3->info, 4-> no log
 	-d - database name to create if it not already exists
 	-s - SQL schema file to init DB (leave blank to to init the DB)
+	-a - Optional additional SQL scripts to append to SQL schema
 	-u - SQL user to grant on specified DB (it host part not specified, defaults to 'localhost')
 	-p - SQL password to set for DB connection
 	-r - specific user privileges to apply (GRANT) on DB (defaults to 'ALL PRIVILEGES')
@@ -52,10 +54,11 @@ function logfile() {
 }
 if [ -e $LOGFILE ]; then touch $LOGFILE; fi
 
-while getopts "d:s:u:p:r:l:" arg; do
+while getopts "d:s:a:u:p:r:l:" arg; do
 	case "$arg" in
 		d) DBNAME="$OPTARG";;
 		s) FILE_SQL_SCHEMA="$OPTARG";;
+		a) APPEND_SCRIPTS+=("$OPTARG");;
 		u) SQL_USER="$OPTARG";;
 		p) SQL_PASSWORD="$OPTARG";;
 		r) SQL_PRIVILEGES="$OPTARG";;
@@ -63,6 +66,7 @@ while getopts "d:s:u:p:r:l:" arg; do
 		*)  print_help ;;
 	esac
 done
+
 
 logfile 0 "$0 -d $DBNAME -s $FILE_SQL_SCHEMA -u $SQL_USER -r $SQL_PRIVILEGES -l $LOGLEVEL"
 
@@ -185,6 +189,21 @@ if [ $? -eq 0 ]; then
 		else
 			logfile 3 "database $DBNAME already exists. skipping DB creation"
 		fi
+
+		# execute optional scripts if -a defined
+		for ITEM in ${APPEND_SCRIPTS[@]}; do
+			if [ -e $ITEM ]; then
+				logfile "applying extra SQL script: $ITEM"
+				$MYSQL ${DBNAME} < $ITEM
+				if [ $? -eq 0 ]; then
+					logfile 3 "successfully ran $ITEM on database $DBNAME"
+				else
+					logfile 2 "failed to run $ITEM on database $DBNAME"
+				fi
+			else
+				logfile 2 "Failed to stat $ITEM file - ignored.." 
+			fi
+		done
 
 		# is a user is supplied, grant privileges on DB to that user
 		if [ ! -z $SQL_USER ]; then
