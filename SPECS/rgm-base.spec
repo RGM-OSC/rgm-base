@@ -43,7 +43,7 @@ install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 %post
 
 %changelog
-* Wed Apr 25 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-5.rgm
+* Thu Apr 25 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-5.rgm
 - add feature on manage-sql.sh script (-a opption)
 - bug fix on lilac_* scripts (autoconfig issue after lilac 3 upgrade)
 
