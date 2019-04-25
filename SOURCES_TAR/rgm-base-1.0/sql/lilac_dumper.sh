@@ -95,16 +95,20 @@ if [ -z $LILACDB ]; then
 fi
 SQLOPTS="--user=${LILACUSR} --password=${LILACPWD}"
 
-
 # enumerates tables in Lilac DB then dump them one by one
 for TABLE in $(mysql $SQLOPTS -N $LILACDB --execute "SHOW TABLES;"); do
-	if [[ $TABLE =~ ^(nagios_.*|.+port_job|label|lilac_configuration)$ ]]; then
-		echo -e "dump table ${CGR}${CBOLD}${TABLE}${CNC} with values"
-		mysqldump $SQLOPTS --compact --add-drop-table $LILACDB $TABLE $DUMPCLAUSE >> $SQLOUT
-	else
-		echo -e "dump table ${CGR}${TABLE}${CNC} schema only"
-		mysqldump $SQLOPTS --compact --add-drop-table --no-data $LILACDB $TABLE >> $SQLOUT
-	fi
+  if [[ $TABLE =~ ^(nagios_.*|.+port_job|label)$ ]]; then
+    echo -e "dump table ${CGR}${CBOLD}${TABLE}${CNC} with values"
+    mysqldump $SQLOPTS --compact --add-drop-table $LILACDB $TABLE $DUMPCLAUSE >> $SQLOUT
+  else
+    if [ "$TABLE" == "lilac_configuration" ]; then
+      echo -e "dump table ${CGR}${CBOLD}${TABLE}${CNC} with values"
+      mysqldump $SQLOPTS --compact --add-drop-table $LILACDB $TABLE >> $SQLOUT
+    else
+      echo -e "dump table ${CGR}${TABLE}${CNC} schema only"
+      mysqldump $SQLOPTS --compact --add-drop-table --no-data $LILACDB $TABLE >> $SQLOUT
+    fi
+  fi
 done
 
 # remove AUTO_INCREMENT counter value from the CREATE statement
