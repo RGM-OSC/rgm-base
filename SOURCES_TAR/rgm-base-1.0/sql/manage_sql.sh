@@ -193,7 +193,7 @@ if [ $? -eq 0 ]; then
 		# execute optional scripts if -a defined
 		for ITEM in ${APPEND_SCRIPTS[@]}; do
 			if [ -e $ITEM ]; then
-				logfile "applying extra SQL script: $ITEM"
+				logfile 3 "applying extra SQL script: $ITEM"
 				$MYSQL ${DBNAME} < $ITEM
 				if [ $? -eq 0 ]; then
 					logfile 3 "successfully ran $ITEM on database $DBNAME"
