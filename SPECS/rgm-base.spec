@@ -27,6 +27,7 @@ install -Dp -m 0644 sql/manage_sql %{buildroot}%{_sysconfdir}/sysconfig/rgm/mana
 install -Dp -o root -g %{rgm_group} sql/manage_sql.sh %{buildroot}%{_datarootdir}/rgm/manage_sql.sh
 install -Dp -o root -g %{rgm_group} sql/lilac_dumper.sh %{buildroot}%{_datarootdir}/rgm/lilac_dumper.sh
 install -Dp -o root -g %{rgm_group} sql/lilac_inspect.sh %{buildroot}%{_datarootdir}/rgm/lilac_inspect.sh
+install -Dp -o root -g %{rgm_group} tools/random.sh %{buildroot}%{_datarootdir}/rgm/random.sh
 install -Dp -o root -g %{rgm_group} sql/lilac_manage_auto_increments.sh %{buildroot}%{_datarootdir}/rgm/lilac_manage_auto_increments.sh
 install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 
@@ -43,6 +44,9 @@ install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 %post
 
 %changelog
+* Mon May 06 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-6.rgm
+- introduce random.sh command
+
 * Fri May 03 2019 Michael Aubertin <maubertin@fr.scc.com> - 1.0-5.rgm
 - Fix minor loglevel issue
 
