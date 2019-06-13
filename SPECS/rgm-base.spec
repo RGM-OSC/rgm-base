@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   6.rgm
+Release:   7.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -44,6 +44,9 @@ install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 %post
 
 %changelog
+* Thu Jun 13 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-7.rgm
+- update rgm update to handle Git retrieval of roles
+
 * Mon May 06 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-6.rgm
 - introduce random.sh command
 
