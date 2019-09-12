@@ -39,6 +39,7 @@ $0 -d <database name> -s <SQL schema file> -u <SQL user> -p <SQL passwd> -r <use
 	-p - SQL password to set for DB connection
 	-r - specific user privileges to apply (GRANT) on DB (defaults to 'ALL PRIVILEGES')
 EOF
+	exit 1
 }
 
 function logfile() {
@@ -126,6 +127,9 @@ function mysql_service() {
 function start_sql_safe() {
 	RET=1
 	mysql_service stop
+	if [ $? -ne 0 ]; then
+		return $RET
+	fi
 	if [ $? -ne 0 ]; then exit 1; fi
 	/usr/bin/systemctl status mariadb &>> $LOGFILE
 	if [ $? -ne 3 ]; then
@@ -164,11 +168,20 @@ function connect_sql_safe() {
 	return $RET
 }
 
+RC=0
+function update_rc() {
+	NEWRC=$1
+	if [ $NEWRC > $RC ]; then
+		RC=$NEWRC
+	fi
+}
 
 ### main section starts here
 
 # stop mariadb daemon then restarts it with no network and a random socket
 # so we ensure nothing can connect while it runs in safe mode with no authentication
+
+
 start_sql_safe
 if [ $? -eq 0 ]; then
 	connect_sql_safe
@@ -182,12 +195,15 @@ if [ $? -eq 0 ]; then
 				$MYSQL ${DBNAME} < ${FILE_SQL_SCHEMA}
 				if [ $? -eq 0 ]; then
 					logfile 3 "successfully ran $FILE_SQL_SCHEMA on database $DBNAME"
+					update_rc 0
 				else
 					logfile 2 "failed to run $FILE_SQL_SCHEMA on database $DBNAME"
+					update_rc 1
 				fi
 			fi
 		else
 			logfile 3 "database $DBNAME already exists. skipping DB creation"
+			update_rc 0
 		fi
 
 		# execute optional scripts if -a defined
@@ -197,11 +213,14 @@ if [ $? -eq 0 ]; then
 				$MYSQL ${DBNAME} < $ITEM
 				if [ $? -eq 0 ]; then
 					logfile 3 "successfully ran $ITEM on database $DBNAME"
+					update_rc 0
 				else
 					logfile 2 "failed to run $ITEM on database $DBNAME"
+					update_rc 1
 				fi
 			else
 				logfile 2 "Failed to stat $ITEM file - ignored.." 
+				update_rc 0
 			fi
 		done
 
@@ -263,4 +282,4 @@ while : ; do
 done
 logfile 3 "restart mariadb"
 mysql_service restart
-exit 0
+exit $RC
