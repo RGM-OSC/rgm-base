@@ -18,15 +18,16 @@
 function print_help() {
 
     echo -e " \e[1m-+- \e[34mRGM\e[39m updater tool -+-\e[0m\n"
-    echo -e "Usage:\n\n  \e[1mrgmupdate -h -p -r -u -a\e[0m\n"
-    echo -e "  -h : this help message"
-    echo -e "  -p : update Ansible playbook from remote Git repo prior to run the update playbook"
-    echo -e "  -r : update Ansible roles from using Ansible Galaxy prior to run the update playbook"
-	echo -e "  -g : extract specified Ansible role directly from its Git repo instead of using Galaxy"
-	echo -e "       format : 'role-name:commit' (can be commit SHA, tag, etc.)"
-	echo -e "       examples: 'rgmupdate -g ansible-role-rgm:ef9ed110'"
-    echo -e "  -u : run the Ansible update playbook only"
-    echo -e "  -a : synonym of -p -r -u"
+    echo -e "Usage:\n\n  \e[1mrgmupdate -h -p -r -u -a -g <role:commit> -o <opts>\e[0m\n"
+    echo -e "  -h               : this help message"
+    echo -e "  -p               : update Ansible playbook from remote Git repo prior to run the update playbook"
+    echo -e "  -r               : update Ansible roles from using Ansible Galaxy prior to run the update playbook"
+	echo -e "  -g <role:commit> : extract specified Ansible role directly from its Git repo instead of using Galaxy"
+	echo -e "                     format : 'role-name:commit' (can be commit SHA, tag, etc.)"
+	echo -e "                     examples: 'rgmupdate -g ansible-role-rgm:ef9ed110'"
+    echo -e "  -u               : run the Ansible update playbook only"
+    echo -e "  -a               : synonym of -p -r -u"
+    echo -e "  -o <opts>        : pass extra parameters to ansible-playbook command line"
     echo -e "\n(c) 2019 RGM team - http://www.rgm-cloud.io"
 }
 
@@ -74,17 +75,19 @@ ANSIBLEPB=0
 ANSIBLEGL=0
 ANSIBLERN=0
 GITROLES=()
+ANSIBLE_PLB_ARGS=
 ANSIBLE_RGM_INSTALLER_REPO="http://gitlab.budcca-demo.lab/rgm-ansible/ansible-rgm.git"
 ANSIBLE_ROOT="/root/ansible-rgm"
 CURDIR=$(pwd)
 
-while getopts hpruag: arg; do
+while getopts hpruag:o: arg; do
 	case "$arg" in
 		h) print_help ;;
 		p) ANSIBLEPB=1 ;;
 		r) ANSIBLEGL=1 ;;
 		u) ANSIBLERN=1 ;;
 		g) GITROLES+=($OPTARG) ;;
+		o) ANSIBLE_PLB_ARGS="$OPTARG" ;;
 		a)
 		    ANSIBLEPB=1
 		    ANSIBLEGL=1
@@ -133,5 +136,5 @@ done
 
 if [ $ANSIBLERN -eq 1 ]; then
     cd $ANSIBLE_ROOT
-    ansible-playbook rgm-installer.yml
+    ansible-playbook "${ANSIBLE_PLB_ARGS}" rgm-installer.yml
 fi
