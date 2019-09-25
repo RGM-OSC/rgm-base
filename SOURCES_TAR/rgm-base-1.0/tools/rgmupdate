@@ -136,5 +136,5 @@ done
 
 if [ $ANSIBLERN -eq 1 ]; then
     cd $ANSIBLE_ROOT
-    ansible-playbook "${ANSIBLE_PLB_ARGS}" rgm-installer.yml
+    ansible-playbook ${ANSIBLE_PLB_ARGS} rgm-installer.yml
 fi
