@@ -22,9 +22,7 @@ function print_help() {
     echo -e "  -h               : this help message"
     echo -e "  -p               : update Ansible playbook from remote Git repo prior to run the update playbook"
     echo -e "  -r               : update Ansible roles from using Ansible Galaxy prior to run the update playbook"
-	echo -e "  -g <role:commit> : extract specified Ansible role directly from its Git repo instead of using Galaxy"
-	echo -e "                     format : 'role-name:commit' (can be commit SHA, tag, etc.)"
-	echo -e "                     examples: 'rgmupdate -g ansible-role-rgm:ef9ed110'"
+    echo -e "  -d               : switch to dev (unstable) ansible playbook version"
     echo -e "  -u               : run the Ansible update playbook only"
     echo -e "  -a               : synonym of -p -r -u"
     echo -e "  -o <opts>        : pass extra parameters to ansible-playbook command line"
@@ -32,73 +30,42 @@ function print_help() {
 }
 
 function print_reqs() {
-	python <<EOF
+    python <<EOF
 import yaml
 v = yaml.load(open('${ANSIBLE_ROOT}/roles/requirements.yml'))
 for item in v:
-	print("{}?{}".format(item['name'], item['src']))
+    print("{}?{}".format(item['name'], item['src']))
 EOF
-}
-
-function get_git_role() {
-	GALAXYREQ="${ANSIBLE_ROOT}/roles/requirements.yml"
-	ROLENAME="$(echo $1 | cut -d ':' -f 1)"
-	ROLEVERS="$(echo $1 | cut -s -d ':' -f 2)"
-	echo "ROLENAME: $ROLENAME - ROLEVERS: $ROLEVERS"
-	if [ -z $ROLEVERS ]; then
-		ROLEVERS='master'
-	fi
-	
-	for item in $(print_reqs); do
-		REQRNAME="$(echo $item | cut -d '?' -f 1)"
-		if [ "$ROLENAME" == "$REQRNAME" ]; then
-			URL="$(echo $item | sed 's/.*\(http.*\)$/\1/')"
-			if [ -e "${ANSIBLE_ROOT}/roles/${ROLENAME}" ]; then
-				rm -Rf "${ANSIBLE_ROOT}/roles/${ROLENAME}"
-			fi
-			SPWD=$(pwd -P)
-			cd "${ANSIBLE_ROOT}/roles"
-			git clone $URL $ROLENAME
-			if [ "$ROLEVERS" != "master" ]; then
-				cd "${ANSIBLE_ROOT}/roles/$ROLENAME"
-				git checkout $ROLEVERS
-			fi
-			cd $SPWD
-			return
-		fi
-	done
-	echo "Error: Ansible role $ROLENAME is unknown !"
-	exit 1
 }
 
 ANSIBLEPB=0
 ANSIBLEGL=0
 ANSIBLERN=0
-GITROLES=()
+ANSIBLEDV=0
+#GITROLES=()
 ANSIBLE_PLB_ARGS=
-ANSIBLE_RGM_INSTALLER_REPO="http://gitlab.budcca-demo.lab/rgm-ansible/ansible-rgm.git"
-ANSIBLE_ROOT="/root/ansible-rgm"
+ANSIBLE_RGM_INSTALLER_REPO="https://framagit.org/rgm-community/ansible/rgm-installer.git"
+ANSIBLE_ROOT="$(basename "$ANSIBLE_RGM_INSTALLER_REPO" | sed 's/\.git//')"
 CURDIR=$(pwd)
 
 while getopts hpruag:o: arg; do
-	case "$arg" in
-		h) print_help ;;
-		p) ANSIBLEPB=1 ;;
-		r) ANSIBLEGL=1 ;;
-		u) ANSIBLERN=1 ;;
-		g) GITROLES+=($OPTARG) ;;
-		o) ANSIBLE_PLB_ARGS="$OPTARG" ;;
-		a)
-		    ANSIBLEPB=1
-		    ANSIBLEGL=1
-		    ANSIBLERN=1
+    case "$arg" in
+        h) print_help ;;
+        p) ANSIBLEPB=1 ;;
+        r) ANSIBLEGL=1 ;;
+        u) ANSIBLERN=1 ;;
+        d) ANSIBLEDV=1 ;;
+        o) ANSIBLE_PLB_ARGS="$OPTARG" ;;
+        a)
+            ANSIBLEPB=1
+            ANSIBLEGL=1
+            ANSIBLERN=1
             ;;
-		*) print_help;;
-	esac
+        *) print_help;;
+    esac
 done
 
-
-if [[ $ANSIBLEPB -eq 0 && $ANSIBLEGL -eq 0 && $ANSIBLERN -eq 0 && ${#GITROLES[@]} -eq 0 ]]; then
+if [[ $ANSIBLEPB -eq 0 && $ANSIBLEGL -eq 0 && $ANSIBLERN -eq 0 ]]; then
     print_help
 fi
 
@@ -112,27 +79,24 @@ fi
 
 if [ $ANSIBLEPB -eq 1 ]; then
     cd $ANSIBLE_ROOT
-    if [ -e /root/rgm-installer_auto-partition.yml ]; then
-        git checkout group_vars/rgm.yml
-        git pull
-        cat /root/rgm-installer_auto-partition.yml >> group_vars/rgm.yml
-    else
-        cp group_vars/rgm.yml /tmp/
-        git checkout group_vars/rgm.yml
-        git pull
-        rm -d group_vars/rgm.yml
-        mv /tmp/rgm.yml group_vars/rgm.yml
-    fi
+    git fetch --all
+    git reset --hard
+    git checkout master
+    ANSIBLEGL=1
+fi
+
+if [ $ANSIBLEDV -eq 1 ]; then
+    cd $ANSIBLE_ROOT
+    git fetch --all
+    git reset --hard
+    git checkout dev
+    ANSIBLEGL=1
 fi
 
 if [ $ANSIBLEGL -eq 1 ]; then
     cd $ANSIBLE_ROOT
     ansible-galaxy install -f -p ${ANSIBLE_ROOT}/roles -r ${ANSIBLE_ROOT}/roles/requirements.yml
 fi
-
-for item in "${GITROLES[@]}"; do
-	get_git_role "$item"
-done
 
 if [ $ANSIBLERN -eq 1 ]; then
     cd $ANSIBLE_ROOT
