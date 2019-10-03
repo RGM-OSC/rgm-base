@@ -27,15 +27,7 @@ function print_help() {
     echo -e "  -a               : synonym of -p -r -u"
     echo -e "  -o <opts>        : pass extra parameters to ansible-playbook command line"
     echo -e "\n(c) 2019 RGM team - http://www.rgm-cloud.io"
-}
-
-function print_reqs() {
-    python <<EOF
-import yaml
-v = yaml.load(open('${ANSIBLE_ROOT}/roles/requirements.yml'))
-for item in v:
-    print("{}?{}".format(item['name'], item['src']))
-EOF
+    exit 1
 }
 
 ANSIBLEPB=0
@@ -45,8 +37,8 @@ ANSIBLEDV=0
 #GITROLES=()
 ANSIBLE_PLB_ARGS=
 ANSIBLE_RGM_INSTALLER_REPO="https://framagit.org/rgm-community/ansible/rgm-installer.git"
-ANSIBLE_ROOT="$(basename "$ANSIBLE_RGM_INSTALLER_REPO" | sed 's/\.git//')"
-CURDIR=$(pwd)
+ANSIBLE_ROOT="/root/$(basename "$ANSIBLE_RGM_INSTALLER_REPO" | sed 's/\.git//')"
+CURDIR=$(pwd -P)
 
 while getopts hpruag:o: arg; do
     case "$arg" in
@@ -102,3 +94,5 @@ if [ $ANSIBLERN -eq 1 ]; then
     cd $ANSIBLE_ROOT
     ansible-playbook ${ANSIBLE_PLB_ARGS} rgm-installer.yml
 fi
+
+cd $CURDIR
