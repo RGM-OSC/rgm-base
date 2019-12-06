@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   10.rgm
+Release:   11.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -23,6 +23,7 @@ Base package for common RGM utility scripts
 
 %install
 install -Dp -o root -g root tools/rgmupdate %{buildroot}%{_sbindir}/rgmupdate
+install -Dp -o root -g root migration/rgm_migrator_lilac.py %{buildroot}%{_sbindir}/rgm_migrator_lilac
 install -Dp -m 0644 sql/manage_sql %{buildroot}%{_sysconfdir}/sysconfig/rgm/manage_sql
 install -Dp -o root -g %{rgm_group} sql/manage_sql.sh %{buildroot}%{_datarootdir}/rgm/manage_sql.sh
 install -Dp -o root -g %{rgm_group} sql/lilac_dumper.sh %{buildroot}%{_datarootdir}/rgm/lilac_dumper.sh
@@ -33,6 +34,7 @@ install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 
 %files
 %attr(0540,root,root) %{_sbindir}/rgmupdate
+%attr(0750,root,%{rgm_group}) %{_sbindir}/rgm_migrator_lilac
 %{_sysconfdir}/sysconfig/rgm/*
 %{_datarootdir}/rgm/*
 %{_docdir}/rgm/*
@@ -44,6 +46,9 @@ install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 %post
 
 %changelog
+* Fri Dec 06 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-11.rgm
+- add rgm_migrator_lilac script
+
 * Thu Oct 03 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-10.rgm
 - update rgmupdate with updated Git repo URL, and new branching policy
 
