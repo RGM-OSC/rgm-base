@@ -88,7 +88,7 @@ def get_csv_from_database(cfglilac, csvfile):
         cur = conn.cursor(MySQLdb.cursors.DictCursor)
         cur.execute("""
             SELECT
-                distinct (hst.`name`) AS `host`,
+                hst.`name` AS `host`,
                 srv.description AS service,
                 srv.id AS srvid,
                 srvtmpl.`name` AS template,
@@ -174,7 +174,6 @@ def inject_csv_to_rgmapi(session, server, csvfile, check_source):
                             srv['service']['name'], srv['hostName']
                         ))
                     else:
-                        #session = requests.session()
                         r = session.post(
                             "https://{server}/rgmapi/createServiceToHost".format(server=server),
                             data=json.dumps(srv)
@@ -224,7 +223,11 @@ Finally, invode the script a second time with '-m export-services'
     parser.add_argument('-c', '--config', type=str, help='JSON configuration file', default='rgm_migrator_lilac.json')
     parser.add_argument('-f', '--csvfile', type=str, help='CSV out file', default='rgm_migrator_lilac.csv')
     parser.add_argument('-v', '--verify', type=bool, help='check Nagios command existence', default=True)
-    parser.add_argument('-m', '--mode', help='mode', type=lambda s: s.lower(), choices=['import-services', 'export-services'])
+    parser.add_argument('-d', '--debug', type=bool, help='display debug messages', default=True)
+    parser.add_argument(
+        '-m', '--mode', help='mode', type=lambda s: s.lower(),
+        choices=['import-services', 'export-services']
+    )
 
     args = parser.parse_args()
 
@@ -260,4 +263,8 @@ Finally, invode the script a second time with '-m export-services'
     elif args.mode == 'export-services':
         session = connect(config['rgmapi']['hostname'], config['rgmapi']['user'], config['rgmapi']['password'])
         if session:
+            if args.debug:
+                print(args.debug, "RGM API session token: {}".format(session.headers['token']))
             inject_csv_to_rgmapi(session, config['rgmapi']['hostname'], args.csvfile, config['check_source'])
+
+# vim: expandtab ts=4 sw=4
