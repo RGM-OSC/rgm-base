@@ -18,14 +18,14 @@
 function print_help() {
 
     echo -e " \e[1m-+- \e[34mRGM\e[39m updater tool -+-\e[0m\n"
-    echo -e "Usage:\n\n  \e[1mrgmupdate -h -p -r -u -a -g <role:commit> -o <opts>\e[0m\n"
+    echo -e "Usage:\n\n  \e[1mrgmupdate -h -p -r -u -a -d -o <opts>\e[0m\n"
     echo -e "  -h               : this help message"
     echo -e "  -p               : update Ansible playbook from remote Git repo prior to run the update playbook"
     echo -e "  -r               : update Ansible roles from using Ansible Galaxy prior to run the update playbook"
     echo -e "  -d               : switch to dev (unstable) ansible playbook version"
     echo -e "  -u               : run the Ansible update playbook only"
     echo -e "  -a               : synonym of -p -r -u"
-    echo -e "  -o <opts>        : pass extra parameters to ansible-playbook command line"
+    echo -e "  -o <opts>        : pass extra parameters to ansible-playbook command line (specify -e in arguments)"
     echo -e "\n(c) 2019 RGM team - http://www.rgm-cloud.io"
     exit 1
 }
@@ -40,7 +40,7 @@ ANSIBLE_RGM_INSTALLER_REPO="https://framagit.org/rgm-community/ansible/rgm-insta
 ANSIBLE_ROOT="/root/$(basename "$ANSIBLE_RGM_INSTALLER_REPO" | sed 's/\.git//')"
 CURDIR=$(pwd -P)
 
-while getopts hpruag:o: arg; do
+while getopts hpruado: arg; do
     case "$arg" in
         h) print_help ;;
         p) ANSIBLEPB=1 ;;
