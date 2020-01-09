@@ -30,14 +30,15 @@ ANSIBLEYM=0
 BACKUP_DIR="/srv/rgm/backup"
 ANSIBLE_PLB_ARGS=
 ANSIBLE_RGM_INSTALLER_REPO="https://github.com/RGM-OSC/ansible-playbook-rgm-installer.git"
-ANSIBLE_ROOT="/root/$(basename "$ANSIBLE_RGM_INSTALLER_REPO" | sed 's/\.git//')"
+#ANSIBLE_ROOT="/root/$(basename "$ANSIBLE_RGM_INSTALLER_REPO" | sed 's/\.git//')"
+ANSIBLE_ROOT="/root/rgm-installer"
 CURDIR=$(pwd -P)
 
 
 function print_help() {
 
     echo -e " \e[1m-+- \e[34mRGM\e[39m updater tool -+-\e[0m\n"
-    echo -e "Usage:\n\n  \e[1mrgmupdate -h -p -r -u -a -g <role:commit> -o <opts>\e[0m\n"
+    echo -e "Usage:\n\n  \e[1mrgmupdate -h -p -r -u -a -d -o <opts>\e[0m\n"
     echo -e "  -h               : this help message"
     echo -e "  -p               : update Ansible playbook from remote Git repo prior to run the update playbook"
     echo -e "  -r               : update Ansible roles from using Ansible Galaxy prior to run the update playbook"
@@ -52,7 +53,7 @@ function print_help() {
 }
 
 
-while getopts hpruag:o: arg; do
+while getopts hpruado: arg; do
     case "$arg" in
         h) print_help ;;
         p) ANSIBLEPB=1 ;;
@@ -93,6 +94,25 @@ if [ $ANSIBLEYM -eq 1 ]; then
 fi
 
 if [ ! -e $ANSIBLE_ROOT ]; then
+
+    if [ ! -d /srv/rgm/ansible_config ]; then
+        mkdir -p /srv/rgm/ansible_config
+        chown root:root
+        chmod 0750 /srv/rgm/ansible_config
+    fi
+    # if dir is *not* a symlink but a hard directory,
+    # and if there is no 'localhost.yml' in ansible_config dir, then copy that one
+    # then destroy the dir to create a symlink in place
+    if [[ ! -L "$ANSIBLE_ROOT/host_vars" && -d "$ANSIBLE_ROOT/host_vars" ]]; then
+        if [[ -f "$ANSIBLE_ROOT/host_vars/localhost.yml" && ! -f "/srv/rgm/ansible_config/localhost.yml" ]]; then
+            cp "$ANSIBLE_ROOT/host_vars/localhost.yml" "/srv/rgm/ansible_config/localhost.yml"
+        fi
+        rm -Rf $ANSIBLE_ROOT/host_vars
+    fi
+    if [ ! -e "$ANSIBLE_ROOT/host_vars" ]; then
+        ln -s /srv/rgm/ansible_config $ANSIBLE_ROOT/host_vars
+    fi
+
     echo -e "\e[31mAnsible root not found, force -p -r\e[0m\n"
     ANSIBLEPB=1
     ANSIBLEGL=1
