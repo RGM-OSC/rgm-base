@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2019 RGM Team
+# Copyright (C) 2019-2020 RGM Team
 # 2019-04-19 - v. 1.0 - Eric Belhomme <ebelhomme@fr.scc.com>
 #
 # LICENCE :
@@ -15,6 +15,25 @@
 #
 #########################################
 
+if [ $UID -ne 0 ]; then
+    echo -e "\e[1;31mError :\e[22m rgmupdate requires root privileges to execute\e[0m"
+    exit 1
+fi
+
+ANSIBLEPB=0
+ANSIBLEGL=0
+ANSIBLERN=0
+ANSIBLEDV=0
+ANSIBLEBK=1
+ANSIBLEYM=0
+#GITROLES=()
+BACKUP_DIR="/srv/rgm/backup"
+ANSIBLE_PLB_ARGS=
+ANSIBLE_RGM_INSTALLER_REPO="https://github.com/RGM-OSC/ansible-playbook-rgm-installer.git"
+ANSIBLE_ROOT="/root/$(basename "$ANSIBLE_RGM_INSTALLER_REPO" | sed 's/\.git//')"
+CURDIR=$(pwd -P)
+
+
 function print_help() {
 
     echo -e " \e[1m-+- \e[34mRGM\e[39m updater tool -+-\e[0m\n"
@@ -25,20 +44,13 @@ function print_help() {
     echo -e "  -d               : switch to dev (unstable) ansible playbook version"
     echo -e "  -u               : run the Ansible update playbook only"
     echo -e "  -a               : synonym of -p -r -u"
+    echo -e "  -b               : disables preliminary SQL backups"
+    echo -e "  -y               : proceed to a preliminary \"yum update\" before ansible-playbook execution"
     echo -e "  -o <opts>        : pass extra parameters to ansible-playbook command line"
     echo -e "\n(c) 2019 RGM team - http://www.rgm-cloud.io"
     exit 1
 }
 
-ANSIBLEPB=0
-ANSIBLEGL=0
-ANSIBLERN=0
-ANSIBLEDV=0
-#GITROLES=()
-ANSIBLE_PLB_ARGS=
-ANSIBLE_RGM_INSTALLER_REPO="https://framagit.org/rgm-community/ansible/rgm-installer.git"
-ANSIBLE_ROOT="/root/$(basename "$ANSIBLE_RGM_INSTALLER_REPO" | sed 's/\.git//')"
-CURDIR=$(pwd -P)
 
 while getopts hpruag:o: arg; do
     case "$arg" in
@@ -47,11 +59,14 @@ while getopts hpruag:o: arg; do
         r) ANSIBLEGL=1 ;;
         u) ANSIBLERN=1 ;;
         d) ANSIBLEDV=1 ;;
+        b) ANSIBLEBK=0 ;;
+        y) ANSIBLEYM=1 ;;
         o) ANSIBLE_PLB_ARGS="$OPTARG" ;;
         a)
             ANSIBLEPB=1
             ANSIBLEGL=1
             ANSIBLERN=1
+            ANSIBLEYM=1
             ;;
         *) print_help;;
     esac
@@ -59,6 +74,22 @@ done
 
 if [[ $ANSIBLEPB -eq 0 && $ANSIBLEGL -eq 0 && $ANSIBLERN -eq 0 ]]; then
     print_help
+fi
+
+if [ $ANSIBLEBK -eq 1 ]; then
+    CURDATE=$(date +'%Y-%m-%d-%Hh%M')
+    if [ ! -e $BACKUP_DIR || ! -d $BACKUP_DIR ]; then
+        mkdir -p $BACKUP_DIR
+    fi
+    for DB in ged grafana lilac nagiosbp nagvis notifier rgmweb; do
+        OUTFILE="${BACKUP_DIR}/rgmupdate_${CURDATE}_${DB}.sql.gz"
+        echo "Creating SQL dump for $DB database on $OUTFILE"
+        mysqldump --compact --add-drop-table $DB | gzip > $OUTFILE
+    done
+fi
+
+if [ $ANSIBLEYM -eq 1 ]; then
+    yum update -y
 fi
 
 if [ ! -e $ANSIBLE_ROOT ]; then

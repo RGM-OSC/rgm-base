@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   11.rgm
+Release:   12.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -46,6 +46,10 @@ install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 %post
 
 %changelog
+* Thu Jan 09 2020 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-12.rgm
+- Ansible git repos now on Github
+- add MySQL backup feature on rgmupdate
+
 * Fri Dec 06 2019 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-11.rgm
 - add rgm_migrator_lilac script
 
