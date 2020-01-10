@@ -33,6 +33,7 @@ RESETINCR=0
 LILACUSR=
 LILACPWD=
 LILACDB=
+NOEXTEND=
 
 CRE='\033[0;31m'
 CGR='\033[0;32m'
@@ -44,7 +45,10 @@ while getopts hd:csfrb:u:p: arg; do
 	case "$arg" in
 		h) print_help;;
 		d) SQLOUT="$OPTARG";;
-		c) DUMPCLAUSE="--where=id<10000";;
+		c)
+			NOEXTEND=" --skip-extended-insert"
+			DUMPCLAUSE="--where=id<10000"
+			;;
 		s) DUMPCLAUSE="--where=id>=10000";;
 		f) DUMPCLAUSE=;;
 		r) RESETINCR=1;;
@@ -99,14 +103,14 @@ SQLOPTS="--user=${LILACUSR} --password=${LILACPWD}"
 for TABLE in $(mysql $SQLOPTS -N $LILACDB --execute "SHOW TABLES;"); do
   if [[ $TABLE =~ ^(nagios_.*|.+port_job|label)$ ]]; then
     echo -e "dump table ${CGR}${CBOLD}${TABLE}${CNC} with values"
-    mysqldump $SQLOPTS --compact --add-drop-table $LILACDB $TABLE $DUMPCLAUSE >> $SQLOUT
+    mysqldump ${SQLOPTS}${NOEXTEND} --compact --add-drop-table $LILACDB $TABLE $DUMPCLAUSE >> $SQLOUT
   else
     if [ "$TABLE" == "lilac_configuration" ]; then
       echo -e "dump table ${CGR}${CBOLD}${TABLE}${CNC} with values"
-      mysqldump $SQLOPTS --compact --add-drop-table $LILACDB $TABLE >> $SQLOUT
+      mysqldump ${SQLOPTS}${NOEXTEND} --compact --add-drop-table $LILACDB $TABLE >> $SQLOUT
     else
       echo -e "dump table ${CGR}${TABLE}${CNC} schema only"
-      mysqldump $SQLOPTS --compact --add-drop-table --no-data $LILACDB $TABLE >> $SQLOUT
+      mysqldump ${SQLOPTS}${NOEXTEND} --compact --add-drop-table --no-data $LILACDB $TABLE >> $SQLOUT
     fi
   fi
 done
