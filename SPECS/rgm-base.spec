@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   13.rgm
+Release:   14.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -28,6 +28,7 @@ install -Dp -m 0644 sql/manage_sql %{buildroot}%{_sysconfdir}/sysconfig/rgm/mana
 install -Dp -o root -g %{rgm_group} sql/manage_sql.sh %{buildroot}%{_datarootdir}/rgm/manage_sql.sh
 install -Dp -o root -g %{rgm_group} sql/lilac_dumper.sh %{buildroot}%{_datarootdir}/rgm/lilac_dumper.sh
 install -Dp -o root -g %{rgm_group} sql/lilac_inspect.sh %{buildroot}%{_datarootdir}/rgm/lilac_inspect.sh
+install -Dp -o root -g %{rgm_group} sql/lilac_rgm_upgrade.py %{buildroot}%{_datarootdir}/rgm/lilac_rgm_upgrade.py
 install -Dp -o root -g %{rgm_group} tools/random.sh %{buildroot}%{_datarootdir}/rgm/random.sh
 install -Dp -o root -g %{rgm_group} sql/lilac_manage_auto_increments.sh %{buildroot}%{_datarootdir}/rgm/lilac_manage_auto_increments.sh
 install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
@@ -46,6 +47,9 @@ install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 %post
 
 %changelog
+* Mon Jan 13 2020 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-14.rgm
+- add lilac_rgm_upgrade.py: a tool for upgrading RGM core records on Lilac DB
+
 * Thu Jan 09 2020 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-13.rgm
 - Ansible git repos now on Github
 - add MySQL backup feature on rgmupdate
