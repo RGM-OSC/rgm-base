@@ -103,14 +103,14 @@ SQLOPTS="--user=${LILACUSR} --password=${LILACPWD}"
 for TABLE in $(mysql $SQLOPTS -N $LILACDB --execute "SHOW TABLES;"); do
   if [[ $TABLE =~ ^(nagios_.*|.+port_job|label)$ ]]; then
     echo -e "dump table ${CGR}${CBOLD}${TABLE}${CNC} with values"
-    mysqldump ${SQLOPTS}${NOEXTEND} --compact --add-drop-table $LILACDB $TABLE $DUMPCLAUSE >> $SQLOUT
+    mysqldump ${SQLOPTS}${NOEXTEND} --order-by-primary --compact --add-drop-table $LILACDB $TABLE $DUMPCLAUSE >> $SQLOUT
   else
     if [ "$TABLE" == "lilac_configuration" ]; then
       echo -e "dump table ${CGR}${CBOLD}${TABLE}${CNC} with values"
-      mysqldump ${SQLOPTS}${NOEXTEND} --compact --add-drop-table $LILACDB $TABLE >> $SQLOUT
+      mysqldump ${SQLOPTS}${NOEXTEND} --order-by-primary --compact --add-drop-table $LILACDB $TABLE >> $SQLOUT
     else
       echo -e "dump table ${CGR}${TABLE}${CNC} schema only"
-      mysqldump ${SQLOPTS}${NOEXTEND} --compact --add-drop-table --no-data $LILACDB $TABLE >> $SQLOUT
+      mysqldump ${SQLOPTS}${NOEXTEND} --order-by-primary --compact --add-drop-table --no-data $LILACDB $TABLE >> $SQLOUT
     fi
   fi
 done

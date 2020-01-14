@@ -8,6 +8,9 @@ URL:       %rgm_web_site
 Vendor:    SCC
 Packager:  ebelhomme@fr.scc.com
 
+Requires: python36
+Requires: python36-mysql
+
 BuildRequires: rpm-macros-rgm
 
 BuildRequires: python3-devel

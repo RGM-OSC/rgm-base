@@ -8,6 +8,7 @@ __license__ = 'GPLv2'
 __version__ = '0.1'
 
 import sys
+import datetime
 import argparse
 import MySQLdb
 
@@ -87,6 +88,9 @@ class ids:
     def get_create(self):
         return self.src.difference(self.dst)
 
+    def get_delete(self):
+        return self.dst.difference(self.src)
+
 
 def compare_table_by_id(tablename) -> ids:
 
@@ -112,8 +116,12 @@ def get_source_row(tablename: str, tid: int) -> dict:
 
 
 def escape_sql(value) -> str:
-    if isinstance(value, str):
-        return value.replace("'", "\\'")
+    if value is None:
+        return 'NULL'
+    elif isinstance(value, str):
+        return "'" + value.replace("'", "\\'") + "'"
+    elif isinstance(value, datetime.date):
+        return "'{}'".format(value)
     return value
 
 
@@ -126,7 +134,7 @@ def create_update_rows_in_table(tablename: str, list_ids: tuple, update: bool = 
                 row.pop('id')
                 stat = "UPDATE `{table}` SET {cols} WHERE `id`={tid}".format(
                     table=tablename,
-                    cols=", ".join(["`{}`='{}'".format(k, escape_sql(row[k])) for k in row.keys()]),
+                    cols=", ".join(["`{}`={}".format(k, escape_sql(row[k])) for k in row.keys()]),
                     tid=tid
                 )
             else:
@@ -134,7 +142,7 @@ def create_update_rows_in_table(tablename: str, list_ids: tuple, update: bool = 
                 stat = "INSERT INTO `{table}` ({rows}) VALUES ({vals})".format(
                     table=tablename,
                     rows=", ".join(["`{}`".format(k) for k in keys]),
-                    vals=", ".join(["'{}'".format(escape_sql(row[k])) for k in keys])
+                    vals=", ".join([escape_sql(row[k]) for k in keys])
                 )
             cur = db_dst.connect().cursor(MySQLdb.cursors.Cursor)
             print("{}".format(stat))
@@ -149,6 +157,12 @@ def upgrade_table(tablename):
         create_update_rows_in_table(tablename, table_ids.get_update(), True)
     if len(table_ids.get_create()) > 0:
         create_update_rows_in_table(tablename, table_ids.get_create())
+    for tid in table_ids.get_delete():
+        stat = "DELETE FROM `{}` WHERE `id`={}".format(tablename, tid)
+        cur = db_dst.connect().cursor(MySQLdb.cursors.Cursor)
+        print(stat)
+        cur.execute(stat)
+        cur.close()
 
 
 def ask_yes_no(req: str) -> bool:
@@ -191,7 +205,7 @@ def compare_table_cols(tablename: str):
         cur = db_dst.connect().cursor(MySQLdb.cursors.DictCursor)
         stat = "UPDATE `{table}` SET {cols} WHERE `id`={tid}".format(
             table=tablename,
-            cols=", ".join(["`{}`='{}'".format(k, escape_sql(update[k])) for k in update.keys()]),
+            cols=", ".join(["`{}`={}".format(k, escape_sql(update[k])) for k in update.keys()]),
             tid=tid
         )
         print("{}".format(stat))
