@@ -8,9 +8,18 @@ URL:       %rgm_web_site
 Vendor:    SCC
 Packager:  ebelhomme@fr.scc.com
 
-BuildRequires:  rpm-macros-rgm
+BuildRequires: rpm-macros-rgm
+
+BuildRequires: python3-devel
+#BuildRequires: python3
+#BuildRequires: python3-libs
+#BuildRequires: python3-setuptools
+#BuildRequires: python36-mysql
 
 Source: %name-%version.tar.gz
+
+# force rpmbuild to byte-compile using Python3
+%global __python %{__python3}
 
 %description
 Base package for common RGM utility scripts
