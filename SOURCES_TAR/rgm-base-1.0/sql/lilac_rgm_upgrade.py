@@ -8,8 +8,10 @@ __license__ = 'GPLv2'
 __version__ = '0.1'
 
 import sys
+import os.path
 import datetime
 import argparse
+import subprocess
 import MySQLdb
 
 
@@ -213,6 +215,22 @@ def compare_table_cols(tablename: str):
         cur.close()
 
 
+def dump_injection(database: str, dumpfile: str):
+    if not os.path.exists(dumpfile) or not os.path.isfile(dumpfile):
+        print("Fatal: SQL dump file {} not found".format(dumpfile))
+        sys.exit(1)
+
+    with open(dumpfile) as fhdump:
+        try:
+            subprocess.run(
+                ['/usr/bin/mysql', database],
+                stdin=fhdump
+            )
+        except subprocess.CalledProcessError as e:
+            print(e)
+            sys.exit(1)
+
+
 def main(maincfg, resources):
 
     def get_lilac_cfg(dbinfo: sqlinfo) -> dict:
@@ -291,12 +309,16 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--password', type=str, help='SQL password', required=True)
     parser.add_argument('-s', '--srcdb', type=str, help='source database', default='lilac_tmp')
     parser.add_argument('-d', '--dstdb', type=str, help='target database', default='lilac')
+    parser.add_argument('-i', '--inject', type=str, help='inject SQL dump on source database')
     parser.add_argument(
         '-m', '--maincfg', action='store_true', help='process nagios main configuration table', default=False
     )
     parser.add_argument('-r', '--resources', action='store_true', help='process nagios resources table', default=False)
 
     args = parser.parse_args()
+
+    if args.inject is not None:
+        dump_injection(args.srcdb, args.inject)
 
     db_src = sqlinfo(host=args.host, user=args.user, pwd=args.password, db=args.srcdb)
     db_dst = sqlinfo(host=args.host, user=args.user, pwd=args.password, db=args.dstdb)

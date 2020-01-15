@@ -1,0 +1,11 @@
+core_max_id:
+  nagios_command: 80
+  nagios_contact: 2
+  nagios_contact_group: 100
+  nagios_host: 6
+  nagios_host_template: 25
+  nagios_hostgroup: 100
+  nagios_service: 300
+  nagios_service_group: 100
+  nagios_service_template: 6
+  nagios_timeperiod: 100
