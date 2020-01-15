@@ -1,6 +1,38 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+RGM Lilac database maintenance tool.
+
+This script tries to repair corrupted Lilac database when 'core' and 'instance' records are melted
+both together.
+
+Usage:
+
+During the first execution, the script will display low records (with `id` < 10000) for some
+key tables and ask you for the last 'core' record for that table.
+
+User answers are saved in a config file (see --config argument) in YAML format so the script will
+*not* request anymore for user input !
+If you need to modify a value, you can either edit the config file *or* remove the entry from the
+config file (or reset the entry to 0)
+
+The script will then try to re-index all SQL tables in a consitent way, by moving all records that
+are not considered as 'core' to an `id` > 10000
+
+Once this is done, you should:
+
+  1. reset SQL AUTO_INCREMENT values:
+     -> use /usr/share/rgm/lilac_manage_auto_increments.sh -s
+
+  2. try a Nagios export (using WEB GUI or RGMAPI). The export should complete successfully. If it
+     fail, then something went wrong. In that case you need to restore your Lilac dump...
+
+Caution : This script can break your Lilac database in an unrecoverable way, you should *always*
+          dump your database securely before any attempt !
+          For easy DB dump, you can invoke "/usr/share/rgm/lilac_dumper.sh -f -d lilac_dump.sql"
+"""
+
 __author__ = 'Eric Belhomme'
 __copyright__ = '2020, SCC'
 __credits__ = ['Eric Belhomme']
@@ -11,17 +43,13 @@ import sys
 import MySQLdb
 import yaml
 import logging
+import argparse
 import pprint
 pp = pprint.PrettyPrinter()
 
 logger = logging
 
-"""
-`nagios_command` table is processed specifically as it require to touch also on `nagios_main_configuration` table,
-which is not "id" driven.
-Basically we'll process `nagios_command` as all the other table with `id` indexes, then we'll patch  the
-table `nagios_main_configuration`
-"""
+
 
 lilac_tables_id = {
     'nagios_command': {
@@ -666,5 +694,24 @@ sql = None
 min_instance_id = 10000
 
 if __name__ == '__main__':
-    sql = sqlinfo(host='127.0.0.1', port=13306, user='root', pwd='0fE!dwtNJLPz7za7', db='lilac')
-    main('lilac_repair.yaml')
+
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        #description="RGM Lilac database maintenance tool",
+        epilog=" version {} - copyright {}".format(__version__, __copyright__),
+        #formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument('-H', '--host', type=str, help='SQL hostname', default='localhost')
+    parser.add_argument('-P', '--port', type=int, help='SQL listening port', default=3306)
+    parser.add_argument('-u', '--user', type=str, help='SQL user', default='root')
+    parser.add_argument('-p', '--password', type=str, help='SQL password', default=None)
+    parser.add_argument('-s', '--db', type=str, help='lilac database', default='lilac')
+    parser.add_argument(
+        '-c', '--config', type=str, help='lilac_repair instance configuration (yaml)',
+        default='lilac_repair.yaml'
+    )
+    args = parser.parse_args()
+
+    sql = sqlinfo(host=args.host, port=args.port, user=args.user, pwd=args.password, db=args.db)
+    main(args.config)
