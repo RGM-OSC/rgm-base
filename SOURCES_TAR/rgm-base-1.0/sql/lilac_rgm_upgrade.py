@@ -13,6 +13,9 @@ import datetime
 import argparse
 import subprocess
 import MySQLdb
+import pprint
+import re
+pp = pprint.PrettyPrinter()
 
 
 tables_list_id = (
@@ -60,9 +63,10 @@ tables_list_id = (
 
 
 class sqlinfo:
-    def __init__(self, host: str, user: str, pwd: str, db: str):
+    def __init__(self, host: str, port: int, user: str, pwd: str, db: str):
         self.info = {
             'host':   host,
+            'port':   port,
             'user':   user,
             'passwd': pwd,
             'db':     db
@@ -231,8 +235,29 @@ def dump_injection(database: str, dumpfile: str):
             sys.exit(1)
 
 
-def main(maincfg, resources):
+def update_auto_increments():
+    cur = db_dst.connect().cursor(MySQLdb.cursors.Cursor)
+    stat = "SHOW TABLES"
+    print(stat)
+    cur.execute(stat)
+    tables = set([i[0] for i in cur.fetchall()])
 
+    regex = re.compile(r"^(nagios_.+|.+port_job)$")
+    for table in tables:
+        if regex.match(table):
+            cur.execute("SELECT MAX(`id`) FROM {}".format(table))
+            maxid = cur.fetchone()[0]
+            if maxid is None or maxid < 10000:
+                maxid = 10000
+            else:
+                maxid = maxid + 1
+            stat = "ALTER TABLE {} AUTO_INCREMENT = {}".format(table, maxid)
+            print(stat)
+            cur.execute(stat)
+    cur.close()
+
+
+def main(maincfg, resources):
     def get_lilac_cfg(dbinfo: sqlinfo) -> dict:
         stat = "SELECT `key`, `value` FROM `lilac_configuration` WHERE `key`=\'db_build\' OR `key`=\'rgm_base_release\'"
         cur = dbinfo.connect().cursor(MySQLdb.cursors.DictCursor)
@@ -290,6 +315,8 @@ def main(maincfg, resources):
         cur.execute(stat)
         cur.close()
 
+    update_auto_increments()
+
 
 # main start here
 
@@ -304,7 +331,8 @@ if __name__ == '__main__':
         epilog=" version {} - copyright {}".format(__version__, __copyright__),
         formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument('-H', '--host', type=str, help='SQL hostname', default='localhost')
+    parser.add_argument('-H', '--host', type=str, help='SQL hostname', default='127.0.0.1')
+    parser.add_argument('-P', '--port', type=int, help='SQL server listening port', default=3306)
     parser.add_argument('-u', '--user', type=str, help='SQL user', default='rgminternal')
     parser.add_argument('-p', '--password', type=str, help='SQL password', required=True)
     parser.add_argument('-s', '--srcdb', type=str, help='source database', default='lilac_tmp')
@@ -320,7 +348,7 @@ if __name__ == '__main__':
     if args.inject is not None:
         dump_injection(args.srcdb, args.inject)
 
-    db_src = sqlinfo(host=args.host, user=args.user, pwd=args.password, db=args.srcdb)
-    db_dst = sqlinfo(host=args.host, user=args.user, pwd=args.password, db=args.dstdb)
+    db_src = sqlinfo(host=args.host, port=args.port, user=args.user, pwd=args.password, db=args.srcdb)
+    db_dst = sqlinfo(host=args.host, port=args.port, user=args.user, pwd=args.password, db=args.dstdb)
 
     main(args.maincfg, args.resources)

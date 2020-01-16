@@ -415,6 +415,9 @@ core_max_ids = {
 
 
 class sqlinfo:
+    """
+    Simple wrapper class to handle SQL connection object
+    """
     def __init__(self, host: str, user: str, pwd: str, db: str, port: int = 3306):
         self.info = {
             'host':   host,
@@ -436,6 +439,10 @@ class sqlinfo:
 
 
 def get_max_index(tablename: str, set_newid: bool = False) -> int:
+    """
+    returns the highest id value for a given table
+    if set_newid is True, increments by 1
+    """
     cur = sql.connect().cursor(MySQLdb.cursors.Cursor)
     cur.execute("SELECT MAX(`id`) FROM {}".format(tablename))
     maxid = cur.fetchone()[0]
@@ -503,6 +510,10 @@ def fix_table_index(tablename: str, core_max_id: int, tabledict: dict) -> list:
 
 
 def fix_service_table(tablename: str, tabledict: dict, ids: set):
+    """
+    update nagios_service table based on records previously touched on service_template, host_template,
+    and host tables
+    """
     touchedid = []
     for tid in ids:
         newid = get_max_index(tablename, True)
@@ -567,6 +578,10 @@ def fix_side_table(tablename: str, ids: set):
 
 
 def index_ids(ids_translation: list, from_old_id: bool = True) -> dict:
+    """
+    create an indexed dict from tuple list of modified ids (old, new)
+    from_old_id allows to choose with value (old or new) is used as index
+    """
     retdict = {}
     for old, new in ids_translation:
         if from_old_id:
@@ -577,6 +592,11 @@ def index_ids(ids_translation: list, from_old_id: bool = True) -> dict:
 
 
 def fix_main_commands(ids_translation: dict):
+    """
+    Fix modified nagios_command references into the main config table.
+    This table doesn't work as the other ones as it contains only one record with many references
+    to nagios_command table.
+    """
     cur = sql.connect().cursor(MySQLdb.cursors.DictCursor)
     stat = """
         SELECT
@@ -610,6 +630,12 @@ def fix_main_commands(ids_translation: dict):
 
 
 def show_table_ids(tablename: str):
+    """
+    Diplays table records ordered by ids, and asks for the last 'core' record id.
+    'core' record are records maintained by RGM team ans should have an id < 10000
+    while 'instance' records are records created by end-users and should always
+    have ids >= 10000
+    """
     desc = None
     cur = sql.connect().cursor(MySQLdb.cursors.DictCursor)
     cur.execute("DESCRIBE {}".format(tablename))
@@ -639,6 +665,28 @@ def user_input_max_id() -> int:
         except ValueError:
             print('ID value must be an integer')
             continue
+
+
+def set_auto_increments():
+    """
+    Build a list of all tables that may have been affected during the repair operations
+    then reset for each table the AUTO_INCREMENT value on `id` column to at least the value
+    of 'min_instance_id' (should be 10000)
+    """
+    tables = set(side_tables)
+    for tbl in lilac_tables_id.keys():
+        tables.update((tbl,))
+        tables.update(lilac_tables_id[tbl]['reference_tables'].keys())
+    tables.update((lilac_service_table['table'],))
+    tables.update(lilac_service_table['reference_tables'].keys())
+
+    for table in tables:
+        maxid = get_max_index(table, True)
+        cur = sql.connect().cursor(MySQLdb.cursors.Cursor)
+        stat = "ALTER TABLE {} AUTO_INCREMENT = {}".format(table, maxid)
+        logger.info(stat)
+        cur.execute(stat)
+        cur.close()
 
 
 def main(yamlfile):
@@ -697,6 +745,8 @@ def main(yamlfile):
         if table in stables.keys():
             fix_side_table(table, sorted(stables[table]))
 
+    set_auto_increments()
+
 
 sql = None
 min_instance_id = 10000
@@ -708,7 +758,7 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=" version {} - copyright {}".format(__version__, __copyright__),
     )
-    parser.add_argument('-H', '--host', type=str, help='SQL hostname', default='localhost')
+    parser.add_argument('-H', '--host', type=str, help='SQL hostname', default='127.0.0.1')
     parser.add_argument('-P', '--port', type=int, help='SQL listening port', default=3306)
     parser.add_argument('-u', '--user', type=str, help='SQL user', default='root')
     parser.add_argument('-p', '--password', type=str, help='SQL password', default=None)
