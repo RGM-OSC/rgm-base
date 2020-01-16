@@ -43,7 +43,6 @@ install -Dp -o root -g %{rgm_group} sql/lilac_manage_auto_increments.sh %{buildr
 install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 
 %files
-%attr(0540,root,root) %{_sbindir}/rgmupdate
 %attr(0750,root,%{rgm_group}) %{_sbindir}/rgm_migrator_lilac
 %{_sysconfdir}/sysconfig/rgm/*
 %{_datarootdir}/rgm/*
