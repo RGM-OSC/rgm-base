@@ -40,6 +40,7 @@ __license__ = 'GPLv2'
 __version__ = '0.1'
 
 import sys
+import os.path
 import MySQLdb
 import yaml
 import logging
@@ -48,7 +49,6 @@ import pprint
 pp = pprint.PrettyPrinter()
 
 logger = logging
-
 
 
 lilac_tables_id = {
@@ -459,7 +459,7 @@ def fix_table_index(tablename: str, core_max_id: int, tabledict: dict) -> list:
     list_ids = []
     cur = sql.connect().cursor(MySQLdb.cursors.Cursor)
     stat = "SELECT id from `{}` WHERE `id` > {} AND `id` < {}".format(tablename, core_max_id, min_instance_id)
-    logger.debug(stat)
+    logger.info(stat)
     cur.execute(stat)
     ids = tuple(i[0] for i in cur.fetchall())
     cur.close()
@@ -468,7 +468,7 @@ def fix_table_index(tablename: str, core_max_id: int, tabledict: dict) -> list:
         mid = get_max_index(tablename, True)
         cur = sql.connect().cursor(MySQLdb.cursors.Cursor)
         stat = "UPDATE {} SET `id`={} WHERE `id`={}".format(tablename, mid, tid)
-        logger.debug(stat)
+        logger.info(stat)
         cur.execute(stat)
         cur.close()
         list_ids.append((tid, mid))
@@ -496,7 +496,7 @@ def fix_table_index(tablename: str, core_max_id: int, tabledict: dict) -> list:
                         col=col,
                         nid=mid
                     )
-                    logger.debug(stat)
+                    logger.info(stat)
                     cur.execute(stat)
                 cur.close()
     return list_ids
@@ -512,7 +512,7 @@ def fix_service_table(tablename: str, tabledict: dict, ids: set):
             nid=newid,
             oid=tid
         )
-        print(stat)
+        logger.info(stat)
         cur.execute(stat)
         cur.close()
         touchedid.append((tid, newid))
@@ -523,6 +523,7 @@ def fix_service_table(tablename: str, tabledict: dict, ids: set):
                 table=table,
                 col=tabledict[table]['column'],
                 value=tid)
+            logger.info(stat)
             cur.execute(stat)
             res = cur.fetchall()
             cur.close()
@@ -543,7 +544,7 @@ def fix_service_table(tablename: str, tabledict: dict, ids: set):
                     col=tabledict[table]['column'],
                     value=newid
                 )
-                logger.debug(stat)
+                logger.info(stat)
                 cur.execute(stat)
                 cur.close()
 
@@ -558,11 +559,11 @@ def fix_side_table(tablename: str, ids: set):
                 nid=newid,
                 oid=oldid
             )
-            print('fix_side_table: ' + stat)
+            logger.info('fix_side_table: ' + stat)
             cur.execute(stat)
             cur.close()
         else:
-            print("discard update table {}, id {}".format(tablename, oldid))
+            logger.info("discard update table {}, id {}".format(tablename, oldid))
 
 
 def index_ids(ids_translation: list, from_old_id: bool = True) -> dict:
@@ -589,7 +590,7 @@ def fix_main_commands(ids_translation: dict):
             service_perfdata_file_processing_command
         FROM nagios_main_configuration WHERE `id` = 1
     """
-    logger.debug(stat)
+    logger.info(stat)
     cur.execute(stat)
     cmds = cur.fetchone()
 
@@ -603,7 +604,7 @@ def fix_main_commands(ids_translation: dict):
         stat = "UPDATE nagios_main_configuration SET {} WHERE `id` = 1".format(
             ",".join(["`{}`={}".format(k, update[k]) for k in update.keys()])
         )
-        logger.debug(stat)
+        logger.info(stat)
         cur.execute(stat)
     cur.close()
 
@@ -623,7 +624,7 @@ def show_table_ids(tablename: str):
     cur.execute(stat)
     rows = cur.fetchall()
     for row in rows:
-        print("id: {} - desc.: {}".format(row['id'], row[desc]))
+        print(" {0:5} - {1}".format(row['id'], row[desc]))
 
 
 def user_input_max_id() -> int:
@@ -641,14 +642,22 @@ def user_input_max_id() -> int:
 
 
 def main(yamlfile):
-    if yamlfile:
-        with open(yamlfile) as file:
-            yml = yaml.load(file)
+    with open(yamlfile) as file:
+        yml = yaml.load(file)
+        if yml is not None and 'core_max_id' in yml.keys() and isinstance(yml['core_max_id'], dict):
             for table in yml['core_max_id'].keys():
-                if table in core_max_ids.keys():
-                    if isinstance(yml['core_max_id'][table], int) and yml['core_max_id'][table] > 0:
-                        core_max_ids[table] = yml['core_max_id'][table]
-    logger.debug("core max IDs: {}".format(core_max_ids))
+                if (
+                    table in core_max_ids.keys()
+                    and isinstance(yml['core_max_id'][table], int)
+                    and yml['core_max_id'][table] > 0
+                ):
+                    logger.info("load core max id value '{}' for table {} from {}".format(
+                        core_max_ids[table],
+                        table,
+                        yamlfile
+                    ))
+                    core_max_ids[table] = yml['core_max_id'][table]
+    logger.info("core max IDs: {}".format(core_max_ids))
 
     # reindex target tables
     for table in lilac_tables_id.keys():
@@ -678,7 +687,6 @@ def main(yamlfile):
             else:
                 stables[stable] = lilac_tables_id[mtable]['reference_tables'][stable]['ids_updated']
 
-    pp.pprint(stables)
     if lilac_service_table['table'] in stables.keys():
         fix_service_table(
             lilac_service_table['table'],
@@ -687,7 +695,7 @@ def main(yamlfile):
         )
     for table in side_tables:
         if table in stables.keys():
-            fix_side_table(table, stables[table])
+            fix_side_table(table, sorted(stables[table]))
 
 
 sql = None
@@ -698,9 +706,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        #description="RGM Lilac database maintenance tool",
         epilog=" version {} - copyright {}".format(__version__, __copyright__),
-        #formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument('-H', '--host', type=str, help='SQL hostname', default='localhost')
     parser.add_argument('-P', '--port', type=int, help='SQL listening port', default=3306)
@@ -711,7 +717,13 @@ if __name__ == '__main__':
         '-c', '--config', type=str, help='lilac_repair instance configuration (yaml)',
         default='lilac_repair.yaml'
     )
+    parser.add_argument('-l', '--log', type=str, help='logfile location', default='lilac_repair.log')
     args = parser.parse_args()
 
+    logger.basicConfig(filename=args.log, level='INFO')
+
     sql = sqlinfo(host=args.host, port=args.port, user=args.user, pwd=args.password, db=args.db)
+    if not os.path.exists(args.config) or not os.path.isfile(args.config):
+        with open(args.config, 'w'):
+            pass
     main(args.config)
