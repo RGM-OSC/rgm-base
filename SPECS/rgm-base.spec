@@ -34,14 +34,10 @@ Base package for common RGM utility scripts
 
 
 %install
-install -Dp -o root -g root tools/rgmupdate %{buildroot}%{_sbindir}/rgmupdate
 install -Dp -o root -g root migration/rgm_migrator_lilac.py %{buildroot}%{_sbindir}/rgm_migrator_lilac
 install -Dp -m 0644 sql/manage_sql %{buildroot}%{_sysconfdir}/sysconfig/rgm/manage_sql
 install -Dp -o root -g %{rgm_group} sql/manage_sql.sh %{buildroot}%{_datarootdir}/rgm/manage_sql.sh
-install -Dp -o root -g %{rgm_group} sql/lilac_dumper.sh %{buildroot}%{_datarootdir}/rgm/lilac_dumper.sh
 install -Dp -o root -g %{rgm_group} sql/lilac_inspect.sh %{buildroot}%{_datarootdir}/rgm/lilac_inspect.sh
-install -Dp -o root -g %{rgm_group} sql/lilac_rgm_upgrade.py %{buildroot}%{_datarootdir}/rgm/lilac_rgm_upgrade.py
-install -Dp -o root -g %{rgm_group} sql/lilac_repair.py %{buildroot}%{_datarootdir}/rgm/lilac_repair.py
 install -Dp -o root -g %{rgm_group} tools/random.sh %{buildroot}%{_datarootdir}/rgm/random.sh
 install -Dp -o root -g %{rgm_group} sql/lilac_manage_auto_increments.sh %{buildroot}%{_datarootdir}/rgm/lilac_manage_auto_increments.sh
 install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
