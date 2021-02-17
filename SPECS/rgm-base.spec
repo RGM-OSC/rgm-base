@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   15.rgm
+Release:   16.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -10,16 +10,16 @@ Packager:  ebelhomme@fr.scc.com
 
 Requires: python36
 Requires: python36-mysql
+Requires: restic
 
 BuildRequires: rpm-macros-rgm
-
 BuildRequires: python3-devel
 #BuildRequires: python3
 #BuildRequires: python3-libs
 #BuildRequires: python3-setuptools
 #BuildRequires: python36-mysql
 
-Source: %name-%version.tar.gz
+Source: %{name}-%{version}.tar.gz
 
 # force rpmbuild to byte-compile using Python3
 %global __python %{__python3}
@@ -42,11 +42,20 @@ install -Dp -o root -g %{rgm_group} tools/random.sh %{buildroot}%{_datarootdir}/
 install -Dp -o root -g %{rgm_group} sql/lilac_manage_auto_increments.sh %{buildroot}%{_datarootdir}/rgm/lilac_manage_auto_increments.sh
 install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 
+# RGM backup
+#install -m 0750 -o %{rgm_user_nagios} -g %{rgm_group} -d %{buildroot}%{rgm_path}/backup
+#install -m 0750 -o %{rgm_user_nagios} -g %{rgm_group} -d %{buildroot}%{rgm_path}/backup/bin
+install -Dp -m 0750 -o root -g %{rgm_group} backup/rgm-backup.sh %{buildroot}%{rgm_path}/backup/bin/rgm-backup.sh
+install -Dp -m 0644 backup/rgmbackup.cron  %{buildroot}%{_sysconfdir}/cron.d/rgm_backup
+
+
 %files
 %attr(0750,root,%{rgm_group}) %{_sbindir}/rgm_migrator_lilac
 %{_sysconfdir}/sysconfig/rgm/*
 %{_datarootdir}/rgm/*
 %{_docdir}/rgm/*
+%attr(0750,root,%{rgm_group}) %{rgm_path}/backup/bin/*
+%config(noreplace) %{_sysconfdir}/cron.d/rgm_backup
 
 %pre
 # create RGM system group if it doesn't already exists
@@ -55,6 +64,9 @@ install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 %post
 
 %changelog
+* Fri Oct 30 2020 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-16.rgm
+- add rgm backup
+
 * Thu Jan 16 2020 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-15.rgm
 - add lilac_repair.py: a tool for Lilac DB maintenance
 
