@@ -19,7 +19,7 @@ BuildRequires: python3-devel
 #BuildRequires: python3-setuptools
 #BuildRequires: python36-mysql
 
-Source: %{name}-%{version}.tar.gz
+Source: %{name}.tar.gz
 
 # force rpmbuild to byte-compile using Python3
 %global __python %{__python3}
@@ -28,7 +28,7 @@ Source: %{name}-%{version}.tar.gz
 Base package for common RGM utility scripts
 
 %prep
-%setup -q
+%setup -q -n %{name}
 
 %build
 
