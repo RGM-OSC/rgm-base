@@ -9,13 +9,18 @@
 
 # User definitions
 BACKUP_ROOT='/srv/rgm/backup'
-BACKUP_PATH="${BACKUP_ROOT}/restic"
-RESTICRETENTION='-d 7 -w 4 -m 3'
 RESTICBIN='/usr/bin/restic'
 RESTICPWDLEN='110'
 RESTICPWDFILE='/root/.resticpwd'
 MARIADBCLIENTCNF='/root/.my.cnf'
-BACKUPPATHLIST=('/etc' '/srv' '/var' "$RESTICPWDFILE" "$MARIADBCLIENTCNF")
+
+if [ -e "$BACKUP_ROOT/environment" ]; then
+    . "$BACKUP_ROOT/environment"
+else
+    BACKUP_PATH="${BACKUP_ROOT}/restic"
+    RESTICRETENTION='--keep-daily 7 --keep-weekly 4 --keep-monthly 3'
+    BACKUPPATHLIST=('/etc' '/srv' '/var' "$RESTICPWDFILE" "$MARIADBCLIENTCNF")
+fi
 
 NOW="$(date +"%Y-%m-%d_%H%M")"
 LOGFILE="${BACKUP_ROOT}/logs/${NOW}.log"

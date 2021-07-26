@@ -1,1 +1,0 @@
-15 3 * * * root /srv/rgm/backup/bin/rgm-backup.sh &> /dev/null

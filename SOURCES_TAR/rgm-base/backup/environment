@@ -1,0 +1,10 @@
+# environment vars for RGM backup
+# Copyrights 2021 & onwards, SCC France, Eric Belhomme <ebelhomme@fr.scc.com>
+
+BACKUP_ROOT='/srv/rgm/backup'
+RESTICBIN='/usr/bin/restic'
+RESTICPWDFILE='/root/.resticpwd'
+
+BACKUP_PATH="${BACKUP_ROOT}/restic"
+RESTICRETENTION='--keep-daily 7 --keep-weekly 4 --keep-monthly 3'
+BACKUPPATHLIST=('/etc' '/srv' '/var' "$RESTICPWDFILE" "$MARIADBCLIENTCNF")

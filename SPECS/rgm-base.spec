@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   16.rgm
+Release:   17.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -34,27 +34,34 @@ Base package for common RGM utility scripts
 
 
 %install
-install -Dp -o root -g root migration/rgm_migrator_lilac.py %{buildroot}%{_sbindir}/rgm_migrator_lilac
+install -Dp -m 0754 -o root -g root migration/rgm_migrator_lilac.py %{buildroot}%{_sbindir}/rgm-lilac-migrator
+install -Dp -m 0754 -o root -g %{rgm_group} sql/lilac_inspect.sh %{buildroot}%{_sbindir}/rgm-lilac-inspect
+install -Dp -m 0754 -o root -g %{rgm_group} sql/lilac_manage_auto_increments.sh %{buildroot}%{_sbindir}/rgm-lilac-manage-auto-increments
+install -Dp -m 0754 -o root -g %{rgm_group} backup/rgm-restic %{buildroot}%{_bindir}/rgm-restic
+
 install -Dp -m 0644 sql/manage_sql %{buildroot}%{_sysconfdir}/sysconfig/rgm/manage_sql
 install -Dp -o root -g %{rgm_group} sql/manage_sql.sh %{buildroot}%{_datarootdir}/rgm/manage_sql.sh
-install -Dp -o root -g %{rgm_group} sql/lilac_inspect.sh %{buildroot}%{_datarootdir}/rgm/lilac_inspect.sh
 install -Dp -o root -g %{rgm_group} tools/random.sh %{buildroot}%{_datarootdir}/rgm/random.sh
-install -Dp -o root -g %{rgm_group} sql/lilac_manage_auto_increments.sh %{buildroot}%{_datarootdir}/rgm/lilac_manage_auto_increments.sh
 install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 
 # RGM backup
 #install -m 0750 -o %{rgm_user_nagios} -g %{rgm_group} -d %{buildroot}%{rgm_path}/backup
 #install -m 0750 -o %{rgm_user_nagios} -g %{rgm_group} -d %{buildroot}%{rgm_path}/backup/bin
 install -Dp -m 0750 -o root -g %{rgm_group} backup/rgm-backup.sh %{buildroot}%{rgm_path}/backup/bin/rgm-backup.sh
+install -Dp -m 0640 -o root -g %{rgm_group} backup/environment %{buildroot}%{rgm_path}/backup/environment
 install -Dp -m 0644 backup/rgmbackup.cron  %{buildroot}%{_sysconfdir}/cron.d/rgm_backup
 
 
 %files
-%attr(0750,root,%{rgm_group}) %{_sbindir}/rgm_migrator_lilac
+%attr(0750,root,%{rgm_group}) %{_sbindir}/rgm-lilac-migrator
+%attr(0754,root,%{rgm_group}) %{_sbindir}/rgm-lilac-inspect
+%attr(0754,root,%{rgm_group}) %{_sbindir}/rgm-lilac-manage-auto-increments
+%attr(0754,root,%{rgm_group}) %{_bindir}/rgm-restic
 %{_sysconfdir}/sysconfig/rgm/*
 %{_datarootdir}/rgm/*
 %{_docdir}/rgm/*
 %attr(0750,root,%{rgm_group}) %{rgm_path}/backup/bin/*
+%attr(0640,root,%{rgm_group}) %{rgm_path}/backup/environment
 %config(noreplace) %{_sysconfdir}/cron.d/rgm_backup
 
 %pre
@@ -64,6 +71,10 @@ install -Dp -m 0644 backup/rgmbackup.cron  %{buildroot}%{_sysconfdir}/cron.d/rgm
 %post
 
 %changelog
+* Mon Jul 26 2021 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-17.rgm
+- move executables to system sbin dir, and prefix all with 'rgm-'
+- add restic helper
+
 * Fri Oct 30 2020 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-16.rgm
 - add rgm backup
 
