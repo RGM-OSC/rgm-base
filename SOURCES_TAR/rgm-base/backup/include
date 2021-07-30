@@ -1,0 +1,23 @@
+# RGM Backup include paths
+# empty lines or lines stating with a '#' are ignored
+#
+# Typical backup policy when RGM is hosted on a VM already backuped with
+# corporate tool like NetBackup or Veeam
+#
+/etc
+/srv/rgm/nagios*/etc
+/srv/rgm/nagios*/var/log/archives
+/srv/rgm/ged*/etc
+/srv/rgm/nagiosbp*/etc
+/srv/rgm/nagvis*/etc
+/srv/rgm/notifier*/etc
+/srv/rgm/prometheus/etc
+/srv/rgm/snmp2elastic/etc
+/srv/rgm/thruk*/*.conf
+
+# Typical backup policy when RGM is hosted on-premise on a physical server
+# with no external backup tool
+#
+#/etc
+#/srv
+#/var

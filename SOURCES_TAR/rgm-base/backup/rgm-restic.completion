@@ -1,0 +1,11 @@
+# bash completion for rgm-restic
+
+. /usr/share/bash-completion/completions/restic
+
+if [[ $(type -t compopt) = "builtin" ]]; then
+    complete -o default -F __start_restic rgm-restic
+else
+    complete -o default -o nospace -F __start_restic rgm-gestic
+fi
+
+# ex: ts=4 sw=4 et filetype=sh

@@ -7,21 +7,8 @@
 # Vincent FRICOU <vincent@fricouv.eu> 2020
 # SCC France 2020 - Eric Belhomme <ebelhomme@fr.scc.com>
 
-# User definitions
-BACKUP_ROOT='/srv/rgm/backup'
-RESTICBIN='/usr/bin/restic'
+RESTICEXTRAVARS=''
 RESTICPWDLEN='110'
-RESTICPWDFILE='/root/.resticpwd'
-MARIADBCLIENTCNF='/root/.my.cnf'
-
-if [ -e "$BACKUP_ROOT/environment" ]; then
-    . "$BACKUP_ROOT/environment"
-else
-    BACKUP_PATH="${BACKUP_ROOT}/restic"
-    RESTICRETENTION='--keep-daily 7 --keep-weekly 4 --keep-monthly 3'
-    BACKUPPATHLIST=('/etc' '/srv' '/var' "$RESTICPWDFILE" "$MARIADBCLIENTCNF")
-fi
-
 NOW="$(date +"%Y-%m-%d_%H%M")"
 LOGFILE="${BACKUP_ROOT}/logs/${NOW}.log"
 if [ ! -d "$(dirname "$LOGFILE")" ]; then
@@ -29,6 +16,30 @@ if [ ! -d "$(dirname "$LOGFILE")" ]; then
 fi
 touch "$LOGFILE" && chmod 0640 "$LOGFILE" || exit 1
 
+# User definitions
+if [ -e "/srv/rgm/backup/environment" ]; then
+    . "/srv/rgm/backup/environment"
+else
+    echo "Fatal: /srv/rgm/backup/environment not found" | tee "${LOGFILE}"
+    exit 1
+fi
+
+if [[ -z "$RESTICINCLUDEPATHS" || ! -e "$RESTICINCLUDEPATHS" || -z "$RESTICEXCLUDEPATHS" || ! -e "$RESTICEXCLUDEPATHS" ]]; then
+    cat <<EOF | tee "${LOGFILE}"
+Fatal : variables RESTICINCLUDEPATHS of RESTICEXCLUDEPATHS not specified or file missing"
+Please check file:
+  - /srv/rgm/backup/environment 
+
+EOF
+    exit 1
+fi
+
+if [ -z "$BACKUP_ROOT" ]; then BACKUP_ROOT='/srv/rgm/backup'; fi
+if [ -z "$RESTICBIN" ]; then RESTICBIN='/usr/bin/restic'; fi
+if [ -z "$RESTICPWDFILE" ]; then RESTICPWDFILE='/root/.resticpwd'; fi
+if [ -z "$MARIADBCLIENTCNF" ]; then MARIADBCLIENTCNF='/root/.my.cnf'; fi
+if [ -z "$BACKUP_PATH" ]; then BACKUP_PATH="${BACKUP_ROOT}/restic"; fi
+if [ -z "$RESTICRETENTION" ]; then RESTICRETENTION='--keep-daily 7 --keep-weekly 4 --keep-monthly 3'; fi
 
 function log_tee() {
     echo "-----------------------------------------------------------" | tee -a "${LOGFILE}"
@@ -71,8 +82,6 @@ for db in $(mysql --defaults-extra-file=${MARIADBCLIENTCNF} -Bse 'show databases
     echo "Dumping database ${db}" | tee -a "${LOGFILE}"
     mysqldump --defaults-extra-file=${MARIADBCLIENTCNF} --compact --order-by-primary --add-drop-table "${db}" -R 2>> "${LOGFILE}" > "$File"
 done
-log_tee "Upload mariadb dumps into restic target"
-$RESTICBIN --repo $BACKUP_PATH -p $RESTICPWDFILE backup "$BACKUPTARGET" | tee -a "${LOGFILE}"
 
 # dump & backup influxdb databases
 log_tee "Starting influxdb dumps"
@@ -83,22 +92,17 @@ for db in $(influx -precision rfc3339 -execute 'show databases' | grep -ve '^nam
     echo "Dumping database ${db}" | tee -a "${LOGFILE}"
     influxd backup -database "${db}" "${Folder}" 1>> "${LOGFILE}" 2>/dev/null
 done
-log_tee "Upload influxdb dumps into restic target start"
-${RESTICBIN} --repo $BACKUP_PATH -p $RESTICPWDFILE backup "$BACKUPTARGET" | tee -a "${LOGFILE}"
 
 # backup flat filesystem
 log_tee "Start flat filesystem backup"
 echo -e "\nBackup folders ${BACKUPPATHLIST[*]}" | tee -a "${LOGFILE}"
-${RESTICBIN} --repo ${BACKUP_PATH} -p ${RESTICPWDFILE} \
-    --exclude ${BACKUP_ROOT} \
-    --exclude /var/lib/elasticsearch \
-    --exclude /var/lib/mysql \
-    --exclude /var/lib/influxdb \
-    --exclude "/srv/rgm/nagios*/var/log/spool" \
-    --exclude "/srv/rgm/thruk*/var/sessions" \
-    --exclude "/srv/rgm/nagios*/etc/lilac-backup*" \
-    --exclude /srv/rgm/backup \
-    backup "${BACKUPPATHLIST[@]}" | tee -a "${LOGFILE}"
+
+${RESTICBIN} --repo "${BACKUP_PATH}" \
+    -p "${RESTICPWDFILE}" \
+    backup "$RESTICEXTRAVARS" \
+    --exclude-file $RESTICEXCLUDEPATHS \
+    --files-from $RESTICINCLUDEPATHS \
+    "$RESTICPWDFILE" "$MARIADBCLIENTCNF" "${BACKUP_ROOT}/dumps" | tee -a "${LOGFILE}"
 
 cat <<EOF | tee "${LOGFILE}"
 

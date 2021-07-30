@@ -1,10 +1,25 @@
 # environment vars for RGM backup
 # Copyrights 2021 & onwards, SCC France, Eric Belhomme <ebelhomme@fr.scc.com>
 
+# environment vars for RGM backup
+
+# following variables shouldn't be modified
 BACKUP_ROOT='/srv/rgm/backup'
 RESTICBIN='/usr/bin/restic'
 RESTICPWDFILE='/root/.resticpwd'
+MARIADBCLIENTCNF='/root/.my.cnf'
 
+# backup path can be changed (eg. for a remote NFS share)
 BACKUP_PATH="${BACKUP_ROOT}/restic"
+
+# default retention policy
 RESTICRETENTION='--keep-daily 7 --keep-weekly 4 --keep-monthly 3'
-BACKUPPATHLIST=('/etc' '/srv' '/var' "$RESTICPWDFILE" "$MARIADBCLIENTCNF")
+
+# Edit the following file to *include* paths to backup
+RESTICINCLUDEPATHS=/etc/rgm/backup/include
+
+# Edit the following file to *exclude* paths from backup
+RESTICEXCLUDEPATHS=/etc/rgm/backup/exclude
+
+# Restic extra parameters
+#RESTICEXTRAVARS='--one-file-system'

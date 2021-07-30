@@ -1,0 +1,17 @@
+# RGM Backup exclude paths
+# empty lines or lines stating with a '#' are ignored
+#
+# Typical backup policy when RGM is hosted on a VM already backuped with
+# corporate tool like NetBackup or Veeam
+#
+/srv/rgm/nagios*/etc/lilac-backup*
+
+# Typical backup policy when RGM is hosted on-premise on a physical server
+# with no external backup tool
+#/srv/rgm/backup
+#/var/lib/elasticsearch
+#/var/lib/mysql
+#/var/lib/influxdb
+#/srv/rgm/nagios*/var/log/spool
+#/srv/rgm/thruk*/var/sessions
+#/srv/rgm/nagios*/etc/lilac-backup*

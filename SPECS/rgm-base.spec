@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   17.rgm
+Release:   18.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -49,7 +49,10 @@ install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 #install -m 0750 -o %{rgm_user_nagios} -g %{rgm_group} -d %{buildroot}%{rgm_path}/backup/bin
 install -Dp -m 0750 -o root -g %{rgm_group} backup/rgm-backup.sh %{buildroot}%{rgm_path}/backup/bin/rgm-backup.sh
 install -Dp -m 0640 -o root -g %{rgm_group} backup/environment %{buildroot}%{rgm_path}/backup/environment
+install -Dp -m 0640 -o root -g %{rgm_group} backup/include %{buildroot}%{_sysconfdir}/rgm/backup/include
+install -Dp -m 0640 -o root -g %{rgm_group} backup/exclude %{buildroot}%{_sysconfdir}/rgm/backup/exclude
 install -Dp -m 0644 backup/rgmbackup.cron  %{buildroot}%{_sysconfdir}/cron.d/rgm_backup
+install -Dp -m 0644 backup/rgm-restic.completion %{buildroot}%{_datarootdir}/bash-completion/completions/rgm-restic
 
 
 %files
@@ -57,12 +60,16 @@ install -Dp -m 0644 backup/rgmbackup.cron  %{buildroot}%{_sysconfdir}/cron.d/rgm
 %attr(0754,root,%{rgm_group}) %{_sbindir}/rgm-lilac-inspect
 %attr(0754,root,%{rgm_group}) %{_sbindir}/rgm-lilac-manage-auto-increments
 %attr(0754,root,%{rgm_group}) %{_bindir}/rgm-restic
+%{_datarootdir}/bash-completion/completions/rgm-restic
 %{_sysconfdir}/sysconfig/rgm/*
 %{_datarootdir}/rgm/*
 %{_docdir}/rgm/*
 %attr(0750,root,%{rgm_group}) %{rgm_path}/backup/bin/*
-%attr(0640,root,%{rgm_group}) %{rgm_path}/backup/environment
+%attr(0660,root,%{rgm_group}) %{rgm_path}/backup/environment
 %config(noreplace) %{_sysconfdir}/cron.d/rgm_backup
+%config(noreplace) %attr(0664,root, %{rgm_group}) %{_sysconfdir}/rgm/backup/include
+%config(noreplace) %attr(0664,root, %{rgm_group}) %{_sysconfdir}/rgm/backup/exclude
+
 
 %pre
 # create RGM system group if it doesn't already exists
@@ -71,6 +78,10 @@ install -Dp -m 0644 backup/rgmbackup.cron  %{buildroot}%{_sysconfdir}/cron.d/rgm
 %post
 
 %changelog
+
+* Wed Jul 28 2021 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-18.rgm
+- enhance restic backup
+
 * Mon Jul 26 2021 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-17.rgm
 - move executables to system sbin dir, and prefix all with 'rgm-'
 - add restic helper
