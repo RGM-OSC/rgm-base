@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   18.rgm
+Release:   19.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -43,7 +43,8 @@ install -Dp -m 0644 sql/manage_sql %{buildroot}%{_sysconfdir}/sysconfig/rgm/mana
 install -Dp -o root -g %{rgm_group} sql/manage_sql.sh %{buildroot}%{_datarootdir}/rgm/manage_sql.sh
 install -Dp -o root -g %{rgm_group} tools/random.sh %{buildroot}%{_datarootdir}/rgm/random.sh
 install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
-
+# RGM Business
+install -Dp -o root -g %{rgm_group} tools/rgm-business.sh %{buildroot}%{_sbindir}/rgm-business
 # RGM backup
 #install -m 0750 -o %{rgm_user_nagios} -g %{rgm_group} -d %{buildroot}%{rgm_path}/backup
 #install -m 0750 -o %{rgm_user_nagios} -g %{rgm_group} -d %{buildroot}%{rgm_path}/backup/bin
@@ -59,6 +60,7 @@ install -Dp -m 0644 backup/rgm-restic.completion %{buildroot}%{_datarootdir}/bas
 %attr(0750,root,%{rgm_group}) %{_sbindir}/rgm-lilac-migrator
 %attr(0754,root,%{rgm_group}) %{_sbindir}/rgm-lilac-inspect
 %attr(0754,root,%{rgm_group}) %{_sbindir}/rgm-lilac-manage-auto-increments
+%attr(0754,root,%{rgm_group}) %{_sbindir}/rgm-business
 %attr(0754,root,%{rgm_group}) %{_bindir}/rgm-restic
 %{_datarootdir}/bash-completion/completions/rgm-restic
 %{_sysconfdir}/sysconfig/rgm/*
@@ -78,6 +80,9 @@ install -Dp -m 0644 backup/rgm-restic.completion %{buildroot}%{_datarootdir}/bas
 %post
 
 %changelog
+
+* Tue Aug 24 2021 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-19.rgm
+- introduce rgm-business activation helper
 
 * Wed Jul 28 2021 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-18.rgm
 - enhance restic backup
