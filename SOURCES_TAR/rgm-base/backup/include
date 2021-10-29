@@ -7,10 +7,13 @@
 /etc
 /srv/rgm/nagios*/etc
 /srv/rgm/nagios*/var/log/archives
+/srv/rgm/nagios*/plugins
 /srv/rgm/ged*/etc
 /srv/rgm/nagiosbp*/etc
 /srv/rgm/nagvis*/etc
+/srv/rgm/nagvis*/share/userfiles
 /srv/rgm/notifier*/etc
+/srv/rgm/notifier*/var/scripts
 /srv/rgm/prometheus/etc
 /srv/rgm/snmp2elastic/etc
 /srv/rgm/thruk*/*.conf

@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   19.rgm
+Release:   20.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -80,6 +80,9 @@ install -Dp -m 0644 backup/rgm-restic.completion %{buildroot}%{_datarootdir}/bas
 %post
 
 %changelog
+
+* Fri Oct 29 2021 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-20.rgm
+- fix rgm backups getting full by adding a dummy file to avoid restic to getting the FS full
 
 * Tue Aug 24 2021 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-19.rgm
 - introduce rgm-business activation helper

@@ -18,6 +18,7 @@ touch "$LOGFILE" && chmod 0640 "$LOGFILE" || exit 1
 
 # User definitions
 if [ -e "/srv/rgm/backup/environment" ]; then
+    # shellcheck source=/dev/null
     . "/srv/rgm/backup/environment"
 else
     echo "Fatal: /srv/rgm/backup/environment not found" | tee "${LOGFILE}"
@@ -40,6 +41,8 @@ if [ -z "$RESTICPWDFILE" ]; then RESTICPWDFILE='/root/.resticpwd'; fi
 if [ -z "$MARIADBCLIENTCNF" ]; then MARIADBCLIENTCNF='/root/.my.cnf'; fi
 if [ -z "$BACKUP_PATH" ]; then BACKUP_PATH="${BACKUP_ROOT}/restic"; fi
 if [ -z "$RESTICRETENTION" ]; then RESTICRETENTION='--keep-daily 7 --keep-weekly 4 --keep-monthly 3'; fi
+if [ -z "$RESERVATION_FILE_SIZE" ]; then RESERVATION_FILE_SIZE='5G'; fi
+RESTIC_REBUILD_LOCK="${BACKUP_ROOT}/.restic-rebuild.lock"
 
 function log_tee() {
     echo "-----------------------------------------------------------" | tee -a "${LOGFILE}"
@@ -70,7 +73,9 @@ fi
 
 # prune old restic snapshots
 log_tee "Start backup retention cleaning (with retention ${RESTICRETENTION})"
-${RESTICBIN} --repo ${BACKUP_PATH} -p ${RESTICPWDFILE} forget --keep-daily ${RESTICRETENTION} --prune | tee -a "${LOGFILE}"
+if [ -f "$RESTIC_REBUILD_LOCK" ]; then rm "$RESTIC_REBUILD_LOCK"; fi
+${RESTICBIN} --repo ${BACKUP_PATH} -p ${RESTICPWDFILE} forget ${RESTICRETENTION} --prune | tee -a "${LOGFILE}"
+fallocate -l ${RESERVATION_FILE_SIZE} "$RESTIC_REBUILD_LOCK"
 log_tee "End backup retention cleaning"
 
 # dump & backup mariadb databases

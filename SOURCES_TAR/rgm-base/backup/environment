@@ -9,6 +9,11 @@ RESTICBIN='/usr/bin/restic'
 RESTICPWDFILE='/root/.resticpwd'
 MARIADBCLIENTCNF='/root/.my.cnf'
 
+# To prevent oversizing backup repository, which may forbid restic for pruning
+# due the impossibility to rebuild the snapshots, we "reserve" a certain amount
+# of storage space (defaults to 1GB)
+RESERVATION_FILE_SIZE='1G'
+
 # backup path can be changed (eg. for a remote NFS share)
 BACKUP_PATH="${BACKUP_ROOT}/restic"
 
