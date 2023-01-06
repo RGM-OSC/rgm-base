@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   20.rgm
+Release:   21.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -80,6 +80,8 @@ install -Dp -m 0644 backup/rgm-restic.completion %{buildroot}%{_datarootdir}/bas
 %post
 
 %changelog
+* Fri Jan 6 2023 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-21.rgm
+- add --core arg on rgm-lilac-manage-auto-increments
 
 * Fri Oct 29 2021 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-20.rgm
 - fix rgm backups getting full by adding a dummy file to avoid restic to getting the FS full
