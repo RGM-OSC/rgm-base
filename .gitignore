@@ -1,3 +1,4 @@
 .vstags
 **/lilac_repair.yaml
 *.log
+/.idea

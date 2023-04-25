@@ -76,8 +76,8 @@ install -Dp -m 0644 backup/rgm-restic.completion %{buildroot}%{_datarootdir}/bas
 %post
 
 %changelog
-* Mon Jul 10 2023 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-22.rgm
-- fix rgm-business script with Teleport & BED dependencies
+* Tue Apr 25 2023 Vincent Fricou <vfricou@fr.sccc.com> - 1.0-22.rgm
+- Update dependencies to python3 and python3-mysqlclient
 
 * Fri Jan 6 2023 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-21.rgm
 - add --core arg on rgm-lilac-manage-auto-increments
