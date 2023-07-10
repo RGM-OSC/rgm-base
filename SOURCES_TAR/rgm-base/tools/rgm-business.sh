@@ -37,6 +37,12 @@ while true; do
     echo -e "Error: unable to unlock PKCS#12 file with that passphrase\n"
 done
 
+
+if ! yum install -y scc-release rgm-release bed-client; then
+    echo -e "\n\nFailed to Install packages scc-release, -release, bed-client. Aborting."
+    exit 1
+fi
+
 # extracts x509 cert & RSA private key from PKCS#12 container
 TEMPDIR="$(mktemp -d)"
 openssl pkcs12 -in "$1" -password "pass:${P12PASS}" -nodes -nokeys -cacerts -out /etc/pki/tls/certs/rgm-full.pem
@@ -47,17 +53,10 @@ openssl pkcs12 -in "$1" -password "pass:${P12PASS}" -nodes -nocerts -out "/etc/p
 chmod 0664 /etc/pki/tls/certs/noc-rgm.pem "/etc/pki/tls/certs/${COMMON_NAME}.crt"
 chmod 0440 "/etc/pki/tls/private/${COMMON_NAME}.key"
 rm -Rf "$TEMPDIR"
-# split x509 CA certs from CA full-chain in system trusted certificates
-awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1} {print > "/tmp/rgmpki" n ".pem"}' /etc/pki/tls/certs/rgm-full.pem
-for cert in $(ls -1 /tmp/rgmpki*pem); do
-    subject="$(openssl x509 -in "$cert" -noout -subject | sed -E 's|.*CN=(.*)/.*|\1|' | tr ' ' _ | tr '[:upper:]' '[:lower:]')"
-    cp "$cert" "/etc/pki/ca-trust/source/anchors/${subject}.crt"
-done
-rm -f /tmp/rgmpki*pem
-update-ca-trust
-update-ca-trust extract
-
-set -e
+rm -f /var/lib/bed/certs/bed.pem /etc/pki/tls/certs/rgmb.crt /etc/pki/tls/private/rgmb.key
+ln -s "/etc/pki/tls/certs/${COMMON_NAME}.crt" /var/lib/bed/certs/bed.pem
+ln -s "/etc/pki/tls/certs/${COMMON_NAME}.crt" /etc/pki/tls/certs/rgmb.crt
+ln -s "/etc/pki/tls/private/${COMMON_NAME}.key" /etc/pki/tls/private/rgmb.key
 
 # enable RGM Business for Ansible playbook
 if grep 'rgm_business_registration_id:' /etc/rgm/ansible/localhost.yml &> /dev/null; then
@@ -66,11 +65,6 @@ else
     echo "rgm_business_registration_id: '${COMMON_NAME}'" >> /etc/rgm/ansible/localhost.yml
 fi
 
-# reconfigure Yum to activate rgm-business repositories
-cd /root/rgm-installer
-ansible-playbook rgm-installer.yml -t packages
-
-# eventually install rgm-business-base package
-yum install -y rgm-business-base
-
+# reconfigure RGM to Business
+cd /root/rgm-installer && ansible-playbook rgm-installer.yml -t business
 exit $?

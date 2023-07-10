@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   21.rgm
+Release:   22.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -76,6 +76,9 @@ install -Dp -m 0644 backup/rgm-restic.completion %{buildroot}%{_datarootdir}/bas
 %post
 
 %changelog
+* Mon Jul 10 2023 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-22.rgm
+- fix rgm-business script with Teleport & BED dependencies
+
 * Fri Jan 6 2023 Eric Belhomme <ebelhomme@fr.scc.com> - 1.0-21.rgm
 - add --core arg on rgm-lilac-manage-auto-increments
 
