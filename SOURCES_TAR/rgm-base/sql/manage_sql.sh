@@ -96,7 +96,7 @@ fi
 
 
 function mysql_pid() {
-	SQLPID=$(ps aux | grep '^mysql .*[m]ysqld' | awk '{print $2}')
+	SQLPID=$(ps aux | grep '^mysql .*mariadb' | awk '{print $2}')
 	if [ -n "$1" ]; then
 		logfile 3 "Killing SQL PID $SQLPID"
 		kill -$1 $SQLPID
