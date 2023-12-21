@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 #
 # install or update SQL schema
 #
@@ -50,7 +50,7 @@ function logfile() {
 			2) echo -n "Warning: " >> $LOGFILE; ;;
 			3) echo -n "Info: " >> $LOGFILE; ;;
 		esac
-		if [ ! -z "$2" ]; then echo -e "$2" >> $LOGFILE; fi
+		if [ -n "$2" ]; then echo -e "$2" >> $LOGFILE; fi
 	fi
 }
 if [ -e $LOGFILE ]; then touch $LOGFILE; fi
@@ -77,12 +77,12 @@ fi
 
 
 # database name is mandatory
-if [ -z $DBNAME ]; then
+if [ -z "$DBNAME" ]; then
 	logfile 1 "no database name provided"
 	exit 1
 fi
 
-if [ ! -z $FILE_SQL_SCHEMA ]; then
+if [ -n "$FILE_SQL_SCHEMA" ]; then
 	if [ ! -e $FILE_SQL_SCHEMA ]; then
 		# SQL schema file not found
 		logfile 1 "the specidied schema file is not found or not readable\n" \
@@ -97,24 +97,24 @@ fi
 
 function mysql_pid() {
 	SQLPID=$(ps aux | grep '^mysql .*[m]ysqld' | awk '{print $2}')
-	if [ ! -z "$1" ]; then
+	if [ -n "$1" ]; then
 		logfile 3 "Killing SQL PID $SQLPID"
 		kill -$1 $SQLPID
 	fi
-	echo $SQLPID
+	echo "$SQLPID"
 }
 
 function mysql_service() {
 	COUNT=0
 	RET=1
 	while : ; do
-		/usr/bin/systemctl $1 mariadb
+		/usr/bin/systemctl "$1" mariadb
 		if [ $? -eq 0 ]; then
 			RET=0
 			break;
 		fi
 		sleep 1
-		COUNT=$(( $COUNT =1 ))
+		COUNT=$(( COUNT + 1 ))
 		if [ $COUNT -gt 10 ]; then
 			logfile 1 "Failed: failed to $1 mariadb service"
 			break;
@@ -159,7 +159,7 @@ function connect_sql_safe() {
 			break;
 		fi
 		sleep 1
-		COUNT=$(( $COUNT +1 ))
+		COUNT=$(( COUNT + 1 ))
 		if [ $COUNT -gt 10 ]; then
 			logfile 1 "Failed to connect mysqld_safe"
 			break;
@@ -171,7 +171,7 @@ function connect_sql_safe() {
 RC=0
 function update_rc() {
 	NEWRC=$1
-	if [ $NEWRC > $RC ]; then
+	if [ $NEWRC -gt $RC ]; then
 		RC=$NEWRC
 	fi
 }
@@ -191,8 +191,8 @@ if [ $? -eq 0 ]; then
 		if [ "$($MYSQL -e 'show databases' | grep -c ^${DBNAME}\$)" == "0" ]; then
 			logfile 3 "create database $DBNAME"
 			$MYSQL -e "CREATE DATABASE ${DBNAME};"
-			if [ ! -z $FILE_SQL_SCHEMA ]; then
-				$MYSQL ${DBNAME} < ${FILE_SQL_SCHEMA}
+			if [ -n "$FILE_SQL_SCHEMA" ]; then
+				$MYSQL "${DBNAME}" < "${FILE_SQL_SCHEMA}"
 				if [ $? -eq 0 ]; then
 					logfile 3 "successfully ran $FILE_SQL_SCHEMA on database $DBNAME"
 					update_rc 0
@@ -207,10 +207,10 @@ if [ $? -eq 0 ]; then
 		fi
 
 		# execute optional scripts if -a defined
-		for ITEM in ${APPEND_SCRIPTS[@]}; do
-			if [ -e $ITEM ]; then
+		for ITEM in "${APPEND_SCRIPTS[@]}"; do
+			if [ -e "$ITEM" ]; then
 				logfile 3 "applying extra SQL script: $ITEM"
-				$MYSQL ${DBNAME} < $ITEM
+				$MYSQL "${DBNAME}" < "$ITEM"
 				if [ $? -eq 0 ]; then
 					logfile 3 "successfully ran $ITEM on database $DBNAME"
 					update_rc 0
@@ -225,7 +225,7 @@ if [ $? -eq 0 ]; then
 		done
 
 		# is a user is supplied, grant privileges on DB to that user
-		if [ ! -z $SQL_USER ]; then
+		if [ -n "$SQL_USER" ]; then
 			# as mariadb is running in safe mode with --skip-grant-tables
 			# flush privileges is required to restart granting prior creating user
 			# or granting privileges./srv/eyesofnetwork/nagios/var/log/rw/live
@@ -233,26 +233,26 @@ if [ $? -eq 0 ]; then
 			# so we create a temporary SQL script to apply all modifications
 			# in one shoot
 			SQLFILE=$(mktemp --suffix -sql)
-			echo "USE mysql;" >> $SQLFILE
-			USERNAME=$(echo $SQL_USER | cut -d '@' -f 1)
+			echo "USE mysql;" >> "$SQLFILE"
+			USERNAME=$(echo "$SQL_USER" | cut -d '@' -f 1)
 			if [[ $SQL_USER =~ .+@.+ ]]; then
-				USERHOST=$(echo $SQL_USER | cut -d '@' -f 2)
+				USERHOST=$(echo "$SQL_USER" | cut -d '@' -f 2)
 			else
 				USERHOST='localhost'
 			fi
 			UEXISTS=$($MYSQL mysql -e "SELECT COUNT(*) FROM user WHERE user = '$USERNAME' AND host = '$USERHOST';")
 			if [ "$UEXISTS" == "0" ]; then
 				logfile 3 "create user '${USERNAME}'@'${USERHOST}'"
-				echo "FLUSH PRIVILEGES;" >> $SQLFILE
-				echo "CREATE USER '${USERNAME}'@'${USERHOST}';" >> $SQLFILE
-				echo "SET PASSWORD FOR '${USERNAME}'@'${USERHOST}' = PASSWORD('$SQL_PASSWORD');" >> $SQLFILE
+				echo "FLUSH PRIVILEGES;" >> "$SQLFILE"
+				echo "CREATE USER '${USERNAME}'@'${USERHOST}';" >> "$SQLFILE"
+				echo "SET PASSWORD FOR '${USERNAME}'@'${USERHOST}' = PASSWORD('$SQL_PASSWORD');" >> "$SQLFILE"
 			else
 				logfile 3 "user '${USERNAME}'@'${USERHOST}' already exists. skipping..."
 			fi
-			echo "FLUSH PRIVILEGES;" >> $SQLFILE
-			echo "GRANT ${SQL_PRIVILEGES} ON \`${DBNAME}\`.* TO '${USERNAME}'@'${USERHOST}';" >> $SQLFILE
-			$MYSQL mysql < $SQLFILE
-			rm -f $SQLFILE
+			echo "FLUSH PRIVILEGES;" >> "$SQLFILE"
+			echo "GRANT ${SQL_PRIVILEGES} ON \`${DBNAME}\`.* TO '${USERNAME}'@'${USERHOST}';" >> "$SQLFILE"
+			$MYSQL mysql < "$SQLFILE"
+			rm -f "$SQLFILE"
 		fi
 
 	else
@@ -268,11 +268,11 @@ COUNT=0
 while : ; do
   sleep 1
   MYSQL_PID=$(mysql_pid)
-  if [ -z $MYSQL_PID ]; then
+  if [ -z "$MYSQL_PID" ]; then
 	logfile 3 "mysqld_safe process terminated."
 	break;
   fi
-  COUNT=$(( $COUNT +1 ))
+  COUNT=$(( COUNT + 1 ))
   if [ $COUNT -gt 10 ]; then
 	logfile 2 "mysqld still running... killing PID $MYSQL_PID"
 	mysql_pid "9" &> /dev/null
@@ -282,4 +282,4 @@ while : ; do
 done
 logfile 3 "restart mariadb"
 mysql_service restart
-exit $RC
+exit "$RC"

@@ -1,7 +1,7 @@
 Summary:   base RGM utilities
 Name:      rgm-base
 Version:   1.0
-Release:   22.rgm
+Release:   23.rgm
 License:   GPL
 BuildArch: noarch
 URL:       %rgm_web_site
@@ -36,8 +36,8 @@ install -Dp -m 0754 -o root -g %{rgm_group} sql/lilac_manage_auto_increments.sh 
 install -Dp -m 0754 -o root -g %{rgm_group} backup/rgm-restic %{buildroot}%{_bindir}/rgm-restic
 
 install -Dp -m 0644 sql/manage_sql %{buildroot}%{_sysconfdir}/sysconfig/rgm/manage_sql
-install -Dp -o root -g %{rgm_group} sql/manage_sql.sh %{buildroot}%{_datarootdir}/rgm/manage_sql.sh
-install -Dp -o root -g %{rgm_group} tools/random.sh %{buildroot}%{_datarootdir}/rgm/random.sh
+install -Dp -m 0750 -o root -g %{rgm_group} sql/manage_sql.sh %{buildroot}%{_datarootdir}/rgm/manage_sql.sh
+install -Dp -m 0755 -o root -g %{rgm_group} tools/random.sh %{buildroot}%{_datarootdir}/rgm/random.sh
 install -Dp doc/readme.txt %{buildroot}%{_docdir}/rgm/readme.txt
 # RGM Business
 install -Dp -o root -g %{rgm_group} tools/rgm-business.sh %{buildroot}%{_sbindir}/rgm-business
@@ -76,6 +76,9 @@ install -Dp -m 0644 backup/rgm-restic.completion %{buildroot}%{_datarootdir}/bas
 %post
 
 %changelog
+* Thu Dec 21 2023 Alex Rocher <arocher@fr.sccc.com> - 1.0-23.rgm
+- Fix executable rights on manage_sql.sh
+
 * Tue Apr 25 2023 Vincent Fricou <vfricou@fr.sccc.com> - 1.0-22.rgm
 - Update dependencies to python3 and python3-mysqlclient
 
